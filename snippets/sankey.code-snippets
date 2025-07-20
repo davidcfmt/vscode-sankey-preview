@@ -1,0 +1,12 @@
+{
+  "Link": {
+    "prefix": "-->",
+    "body": "$1 --> $2: $3",
+    "description": "Add a Sankey link"
+  },
+  "Class": {
+    "prefix": "class",
+    "body": "class $1 color:#${2:FF0000}",
+    "description": "Style a node"
+  }
+}

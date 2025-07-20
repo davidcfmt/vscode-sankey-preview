@@ -1,0 +1,42 @@
+// Test quoted node names for styling
+Canada --> France: 1
+Spain --> Senegal: 1
+Spain --> Morocco: 5
+Spain --> "South Africa": 1
+England --> Senegal: 1
+England --> Morocco: 3
+England --> "South Africa": 10
+England --> Angola: 1
+Mali --> China: 5
+Mali --> "Inídia": 1
+Mali --> Japan: 5
+Angola --> China: 8
+Angola --> "Inídia": 1
+Angola --> Japan: 3
+Senegal --> China: 8
+Senegal --> "Inídia": 1
+Senegal --> Japan: 3
+Morocco --> China: 8
+Morocco --> "Inídia": 1
+Morocco --> Japan: 3
+"South Africa" --> China: 5
+"South Africa" --> "Inídia": 1
+"South Africa" --> Japan: 3
+
+// Styling - both quoted and unquoted names work
+class Canada color:#FFDDDD
+class Mexico color:#FFDDDD
+class Brazil color:#FFDD44
+class USA color:#FFDD00
+class Portugal color:#0099FF
+class France color:#2299FF
+class Spain color:#4499FF
+class England color:#BB99FF
+class Mali color:#AABB00
+class Angola color:#BB0000
+class Senegal color:#DD0000
+class Morocco color:#FF0000
+class "South Africa" color:#FF4400
+class China color:#FFAA00
+class "Inídia" color:#AA0000
+class Japan color:#DD0000

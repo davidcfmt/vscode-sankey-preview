@@ -1,0 +1,17 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Launch Extension",
+			"type": "shell",
+			"command": "code",
+			"args": [
+				"--extensionDevelopmentPath=.",
+				"--new-window",
+				"test.sankey"
+			],
+			"group": "build",
+			"isBackground": false
+		}
+	]
+}

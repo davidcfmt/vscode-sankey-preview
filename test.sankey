@@ -1,0 +1,12 @@
+Revenue --> Retail: 300
+Revenue --> Online: 200
+Retail --> Mobile: 150
+Online --> Mobile: 100
+Mobile --> Apps: 50
+Mobile --> Web: 75
+class Revenue color:#FF6B6B
+class Retail color:#4ECDC4
+class Online color:#45B7D1
+class Mobile color:#96CEB4
+class Apps color:#FFEAA7
+class Web color:#DDA0DD

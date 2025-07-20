@@ -1,0 +1,12 @@
+{
+  "scopeName": "source.sankey",
+  "patterns": [
+    { "name": "comment.line.double-slash.sankey", "match": "//.*$" },
+    { "name": "keyword.other.class.sankey", "match": "\\bclass\\b" },
+    { "name": "constant.numeric.sankey", "match": "\\b\\d+(?:\\.\\d+)?\\b" },
+    { "name": "keyword.operator.arrow.sankey", "match": "-->" },
+    { "name": "string.quoted.double.sankey", "begin": "\"", "end": "\"" }
+  ],
+  "repository": {},
+  "injections": {}
+}

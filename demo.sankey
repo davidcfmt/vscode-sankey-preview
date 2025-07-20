@@ -1,0 +1,11 @@
+Revenue --> Retail --> Online --> Mobile: 300
+Revenue --> Retail --> Store --> Cash: 200
+Revenue --> Cloud --> AWS --> Compute: 600
+Revenue --> Cloud --> Azure --> Storage: 400
+class Retail color:#FFDD00
+class Cloud color:#0099FF
+class Online color:#FF6B6B
+class Mobile color:#4ECDC4
+class Store color:#FFE66D
+class AWS color:#FF9F43
+class Azure color:#6C5CE7

@@ -1,0 +1,12 @@
+# Test files and development artifacts
+test*.sankey
+test*.md
+test*.html
+demo.sankey
+INSTRUCTIONS.md
+SECURITY.md
+.vscode/
+.git/
+node_modules/
+*.vsix
+.gitignore

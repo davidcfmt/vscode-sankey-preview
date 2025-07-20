@@ -3,7 +3,7 @@
   "displayName": "Sankey Markdown Preview",
   "description": "Write and preview text-based Sankey diagrams inside Markdown and .sankey files with multi-layer support and professional styling.",
   "version": "1.0.0",
-  "publisher": "camdavid",
+  "publisher": "DavidCampbell",
   "author": {
     "name": "David Campbell",
     "email": "david.campbell11@outlook.com"
@@ -11,12 +11,12 @@
   "license": "MIT",
   "repository": {
     "type": "git", 
-    "url": "https://github.com/camdavid/vscode-sankey-preview.git"
+    "url": "https://github.com/davidcfmt/vscode-sankey-preview.git"
   },
   "bugs": {
-    "url": "https://github.com/camdavid/vscode-sankey-preview/issues"
+    "url": "https://github.com/davidcfmt/vscode-sankey-preview/issues"
   },
-  "homepage": "https://github.com/camdavid/vscode-sankey-preview#readme",
+  "homepage": "https://github.com/davidcfmt/vscode-sankey-preview#readme",
   "engines": { 
     "vscode": "^1.91.0" 
   },

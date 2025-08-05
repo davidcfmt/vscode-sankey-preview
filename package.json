@@ -41,7 +41,8 @@
     "theme": "dark"
   },
   "activationEvents": [
-    "onLanguage:sankey"
+    "onLanguage:sankey",
+    "onLanguage:markdown"
   ],
   "main": "./src/extension.js",
   "contributes": {
@@ -63,7 +64,41 @@
       { "command": "sankeyPreview.exportSvg", "title": "Sankey: Export SVG" },
       { "command": "sankeyPreview.exportPng", "title": "Sankey: Export PNG" }
     ],
-    "markdown.previewScripts": [ "./media/preview.js" ]
+    "keybindings": [
+      {
+        "command": "sankeyPreview.show",
+        "key": "ctrl+shift+p",
+        "when": "resourceExtname == .sankey"
+      }
+    ],
+    "markdown.previewScripts": [
+      "./media/preview.js"
+    ]
+  },
+  "configuration": {
+    "title": "Sankey Preview",
+    "properties": {
+      "sankeyPreview.maxInputSize": {
+        "type": "number",
+        "default": 100000,
+        "description": "Maximum input size in bytes (100KB default)"
+      },
+      "sankeyPreview.maxNodes": {
+        "type": "number",
+        "default": 1000,
+        "description": "Maximum number of nodes allowed"
+      },
+      "sankeyPreview.maxLinks": {
+        "type": "number",
+        "default": 5000,
+        "description": "Maximum number of links allowed"
+      },
+      "sankeyPreview.autoRefresh": {
+        "type": "boolean",
+        "default": true,
+        "description": "Automatically refresh preview on save"
+      }
+    }
   },
   "scripts": {
     "lint": "eslint src --ext .js",
@@ -71,7 +106,7 @@
   },
   "devDependencies": {
     "@types/vscode": "^1.91.0",
-    "eslint": "^8.59.0",
-    "vsce": "^3.24.0"
+    "eslint": "^8.57.0",
+    "vsce": "^2.15.0"
   }
 }

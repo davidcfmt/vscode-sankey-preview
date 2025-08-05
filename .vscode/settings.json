@@ -1,0 +1,7 @@
+{
+  // Allow local preview scripts (D3, Sankey and preview.js) to load
+  "markdown.preview.securityLevel": "allowInsecureLocal",
+  "cSpell.words": [
+    "sankey"
+  ]
+}

@@ -1,12 +1,49 @@
-Revenue --> Retail: 300
-Revenue --> Online: 200
-Retail --> Mobile: 150
-Online --> Mobile: 100
-Mobile --> Apps: 50
-Mobile --> Web: 75
-class Revenue color:#FF6B6B
-class Retail color:#4ECDC4
-class Online color:#45B7D1
-class Mobile color:#96CEB4
-class Apps color:#FFEAA7
-class Web color:#DDA0DD
+// Comprehensive Sankey Diagram Test
+// This file demonstrates all features of the extension
+
+// Simple two-node flows
+Revenue --> Expenses: 800
+Revenue --> Savings: 200
+
+// Multi-layer flows (chained nodes)
+Sales --> Marketing --> Digital --> Social: 150
+Sales --> Marketing --> Traditional --> TV: 100
+Sales --> Marketing --> Traditional --> Radio: 50
+
+// Complex business process flow
+Input --> Processing --> Quality --> Output: 300
+Input --> Processing --> Waste --> Disposal: 50
+Input --> Direct --> Output: 100
+
+// Energy flow example
+Solar --> Battery --> Home: 400
+Solar --> Grid --> Home: 200
+Wind --> Battery --> Home: 150
+Wind --> Grid --> Home: 250
+
+// Styling with custom colors
+class Revenue color:#2ECC71
+class Expenses color:#E74C3C
+class Savings color:#3498DB
+class Sales color:#FF6B6B
+class Marketing color:#4ECDC4
+class Digital color:#45B7D1
+class Traditional color:#96CEB4
+class Social color:#FFEAA7
+class TV color:#DDA0DD
+class Radio color:#74B9FF
+class Input color:#00B894
+class Processing color:#FDCB6E
+class Quality color:#6C5CE7
+class Waste color:#A29BFE
+class Direct color:#FD79A8
+class Output color:#00CEC9
+class Disposal color:#636E72
+class Solar color:#FFD93D
+class Wind color:#6C5CE7
+class Battery color:#00B894
+class Grid color:#74B9FF
+class Home color:#FD79A8
+
+// Comments are supported with both styles
+%% This is an alternative comment style

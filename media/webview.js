@@ -4,10 +4,22 @@
 
     let parsed;
     
-    // Simple parser function - same as before but inline
+    // HTML escaping function to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // Simple parser function - same as parser.js but inline
     function parseSankey(text) {
       if (!text || typeof text !== 'string') {
         throw new Error('No text provided or text is not a string');
+      }
+
+      // Add input size limits to prevent DoS attacks
+      if (text.length > 100000) { // 100KB limit
+        throw new Error('Input too large (maximum 100KB)');
       }
       
       const nodes = [];
@@ -16,8 +28,15 @@
       const styles = {};
       const options = {};
 
+      // Limit number of nodes to prevent memory exhaustion
+      const MAX_NODES = 1000;
+      const MAX_LINKS = 5000;
+
       const get = (name) => {
         if (!index.has(name)) {
+          if (nodes.length >= MAX_NODES) {
+            throw new Error(`Too many nodes (maximum ${MAX_NODES})`);
+          }
           index.set(name, nodes.length);
           nodes.push({ id: name });
         }
@@ -42,7 +61,13 @@
         }
         
         const colorMatch = rest?.match(/color\s*:\s*(#[0-9a-f]{3,8})/i);
-        if (node && colorMatch) styles[node] = { color: colorMatch[1] };
+        if (node && colorMatch) {
+          // Validate color format
+          const color = colorMatch[1];
+          if (color && /^#[0-9a-f]{3,8}$/i.test(color)) {
+            styles[node] = { color: color };
+          }
+        }
         continue;
       }
 
@@ -68,34 +93,25 @@
 
       // Create links for each step in the chain
       for (let i = 0; i < pathNodes.length - 1; i++) {
-        // Sanitize node names (prevent XSS and limit length)
-        let source = pathNodes[i].trim();
-        let target = pathNodes[i + 1].trim();
+        if (links.length >= MAX_LINKS) {
+          throw new Error(`Too many links (maximum ${MAX_LINKS})`);
+        }
         
-        // Handle quoted node names
-        if (source.startsWith('"') && source.endsWith('"')) {
-          source = source.slice(1, -1);
-        }
-        if (target.startsWith('"') && target.endsWith('"')) {
-          target = target.slice(1, -1);
-        }
+        const source = pathNodes[i].replace(/^"(.*)"$/, '$1'); // Remove quotes if present
+        const target = pathNodes[i + 1].replace(/^"(.*)"$/, '$1'); // Remove quotes if present
         
         // Validate and sanitize node names
-        if (typeof source !== 'string' || source.length === 0) {
-          throw new Error(`Invalid source node name: ${pathNodes[i]}`);
+        if (!source || source.length === 0 || source.length > 100) {
+          throw new Error(`Invalid source node name: ${source} (must be 1-100 characters)`);
         }
-        if (typeof target !== 'string' || target.length === 0) {
-          throw new Error(`Invalid target node name: ${pathNodes[i + 1]}`);
+        if (!target || target.length === 0 || target.length > 100) {
+          throw new Error(`Invalid target node name: ${target} (must be 1-100 characters)`);
         }
-        
-        // Remove potentially dangerous characters and limit length
-        source = source.replace(/[<>\"'&]/g, '').substring(0, 100);
-        target = target.replace(/[<>\"'&]/g, '').substring(0, 100);
         
         // Validate numeric value
         const numericValue = parseFloat(val);
-        if (isNaN(numericValue) || !isFinite(numericValue) || numericValue < 0) {
-          throw new Error(`Invalid numeric value: ${val}`);
+        if (isNaN(numericValue) || numericValue < 0 || !isFinite(numericValue)) {
+          throw new Error(`Invalid value: ${val} (must be a non-negative finite number)`);
         }
         
         links.push({
@@ -115,16 +131,29 @@
   function render(text) {
     // Clear previous content
     const root = document.getElementById('root');
-    root.innerHTML = '';    // Handle undefined or null text
+    root.innerHTML = '<div style="display: flex; justify-content: center; align-items: center; height: 100%; color: #666;">Loading diagram...</div>';
+    
+    console.log('Render called with:', typeof text, text?.length);
+    
+    // Handle undefined or null text - more lenient check
     if (!text || typeof text !== 'string') {
+      console.log('Text validation failed:', {text, type: typeof text});
       root.innerHTML = '<p style="color: #666; padding: 20px; text-align: center;">No valid text provided for parsing</p>';
+      return;
+    }
+    
+    // Remove extra whitespace but don't fail on whitespace-only content
+    text = text.trim();
+    if (text.length === 0) {
+      console.log('Text is empty after trim');
+      root.innerHTML = '<p style="color: #666; padding: 20px; text-align: center;">File appears to be empty</p>';
       return;
     }
     
     try {
       parsed = parseSankey(text);
     } catch (e) {
-      root.innerHTML = '<p style="color: red; padding: 20px;">Parse Error: ' + e.message + '</p>';
+      root.innerHTML = '<p style="color: red; padding: 20px;">Parse Error: ' + escapeHtml(e.message) + '</p>';
       return;
     }
     
@@ -139,8 +168,12 @@
       return;
     }
 
-    const width = document.body.clientWidth;
-    const height = document.body.clientHeight;
+    // Use proper dimensions with padding
+    const width = Math.max(800, document.body.clientWidth);
+    const height = Math.max(600, document.body.clientHeight);
+    const margin = { top: 50, right: 150, bottom: 50, left: 150 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
     
     // Clear any existing content
     document.getElementById('root').innerHTML = '';
@@ -148,7 +181,7 @@
     const svg = d3.select('#root').append('svg')
       .attr('width', width)
       .attr('height', height)
-      .style('background', '#f8f9fa');
+      .style('background', '#fff');
 
     // Add definitions for gradients and filters
     const defs = svg.append('defs');
@@ -167,12 +200,13 @@
       .attr('stdDeviation', 1)
       .attr('flood-color', 'rgba(0,0,0,0.15)');
 
-    const container = svg.append('g');
+    const container = svg.append('g')
+      .attr('transform', `translate(${margin.left},${margin.top})`);
 
     const sankey = d3.sankey()
-      .nodeWidth(25)
-      .nodePadding(20)
-      .extent([[40, 40], [width - 40, height - 40]]);
+      .nodeWidth(20)
+      .nodePadding(30)
+      .extent([[0, 0], [innerWidth, innerHeight]]);
 
     const graph = sankey({
       nodes: parsed.nodes.map(d => Object.assign({}, d)),
@@ -224,18 +258,18 @@
       .append('title')
       .text(d => `${d.id}\n${d.value}`);
 
-    // Add node labels with enhanced styling
+    // Add node labels with better positioning and larger font
     container.append('g')
       .selectAll('text')
       .data(graph.nodes)
       .join('text')
-      .attr('x', d => d.x0 < width / 2 ? d.x1 + 12 : d.x0 - 12)
+      .attr('x', d => d.x0 < innerWidth / 2 ? d.x1 + 8 : d.x0 - 8)
       .attr('y', d => (d.y1 + d.y0) / 2)
       .attr('dy', '0.35em')
-      .attr('text-anchor', d => d.x0 < width / 2 ? 'start' : 'end')
+      .attr('text-anchor', d => d.x0 < innerWidth / 2 ? 'start' : 'end')
       .style('font-family', '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif')
-      .style('font-size', '13px')
-      .style('font-weight', '500')
+      .style('font-size', '14px')
+      .style('font-weight', '600')
       .style('fill', '#2c3e50')
       .style('pointer-events', 'none')
       .text(d => d.id);
@@ -269,29 +303,35 @@
     link.append('path')
       .attr('d', d3.sankeyLinkHorizontal())
       .attr('stroke', (d, i) => `url(#linkGradient${i})`)
-      .attr('stroke-width', d => Math.max(2, d.width))
+      .attr('stroke-width', d => Math.max(3, d.width))
+      .attr('opacity', 0.7)
       .style('cursor', 'pointer')
       .on('mouseover', function(event, d) {
         d3.select(this)
           .transition()
           .duration(200)
-          .attr('stroke-width', d => Math.max(3, d.width + 1));
+          .attr('opacity', 0.9)
+          .attr('stroke-width', d => Math.max(4, d.width + 2));
       })
       .on('mouseout', function(event, d) {
         d3.select(this)
           .transition()
           .duration(200)
-          .attr('stroke-width', d => Math.max(2, d.width));
+          .attr('opacity', 0.7)
+          .attr('stroke-width', d => Math.max(3, d.width));
       })
       .append('title')
       .text(d => `${d.source.id} → ${d.target.id}\n${d.value}`);
 
-    // Enhanced zoom and pan
+    // Add zoom and pan with better bounds
     const zoom = d3.zoom()
-      .scaleExtent([0.1, 5])
-      .on('zoom', (e) => {
-        container.attr('transform', e.transform);
+      .scaleExtent([0.3, 3])
+      .on('zoom', (event) => {
+        container.attr('transform', 
+          `translate(${margin.left + event.transform.x},${margin.top + event.transform.y}) scale(${event.transform.k})`
+        );
       });
+
     svg.call(zoom);
 
     // Subtle export buttons
@@ -387,10 +427,19 @@
 
   // Wait for D3 libraries to load, then render
   function checkAndRender() {
+    console.log('checkAndRender called');
+    console.log('D3 available:', typeof d3 !== 'undefined');
+    console.log('D3 sankey available:', typeof d3 !== 'undefined' && typeof d3.sankey !== 'undefined');
+    console.log('window.__INITIAL_TEXT__ available:', typeof window.__INITIAL_TEXT__ !== 'undefined');
+    console.log('window.__INITIAL_TEXT__ value:', window.__INITIAL_TEXT__);
+    
     if (typeof d3 !== 'undefined' && typeof d3.sankey !== 'undefined') {
       const initialText = window.__INITIAL_TEXT__ || '';
+      console.log('checkAndRender() - initialText length:', initialText.length);
+      console.log('checkAndRender() - initialText preview:', initialText.substring(0, 50));
       render(initialText);
     } else {
+      console.log('Waiting for D3 libraries...');
       setTimeout(checkAndRender, 100);
     }
   }
@@ -406,6 +455,6 @@
   });
   
   } catch (error) {
-    document.getElementById('root').innerHTML = `<p style="color: red; padding: 20px;">Error: ${error.message}</p>`;
+    document.getElementById('root').innerHTML = `<p style="color: red; padding: 20px;">Error: ${escapeHtml(error.message)}</p>`;
   }
 })();

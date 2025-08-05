@@ -4,14 +4,26 @@ function parseSankey(text) {
     throw new Error('No text provided or text is not a string');
   }
 
+  // Add input size limits to prevent DoS attacks
+  if (text.length > 100000) { // 100KB limit
+    throw new Error('Input too large (maximum 100KB)');
+  }
+
   const nodes = [];
   const index = new Map();
   const links = [];
   const styles = {};
   const options = {};
 
+  // Limit number of nodes to prevent memory exhaustion
+  const MAX_NODES = 1000;
+  const MAX_LINKS = 5000;
+
   const get = (name) => {
     if (!index.has(name)) {
+      if (nodes.length >= MAX_NODES) {
+        throw new Error(`Too many nodes (maximum ${MAX_NODES})`);
+      }
       index.set(name, nodes.length);
       nodes.push({ id: name });
     }
@@ -68,13 +80,25 @@ function parseSankey(text) {
 
     // Create links for each step in the chain
     for (let i = 0; i < pathNodes.length - 1; i++) {
+      if (links.length >= MAX_LINKS) {
+        throw new Error(`Too many links (maximum ${MAX_LINKS})`);
+      }
+      
       const source = pathNodes[i].replace(/^"(.*)"$/, '$1'); // Remove quotes if present
       const target = pathNodes[i + 1].replace(/^"(.*)"$/, '$1'); // Remove quotes if present
       
+      // Validate and sanitize node names
+      if (!source || source.length === 0 || source.length > 100) {
+        throw new Error(`Invalid source node name: ${source} (must be 1-100 characters)`);
+      }
+      if (!target || target.length === 0 || target.length > 100) {
+        throw new Error(`Invalid target node name: ${target} (must be 1-100 characters)`);
+      }
+      
       // Validate numeric value
       const numericValue = parseFloat(val);
-      if (isNaN(numericValue) || numericValue < 0) {
-        throw new Error(`Invalid value: ${val} (must be a non-negative number)`);
+      if (isNaN(numericValue) || numericValue < 0 || !isFinite(numericValue)) {
+        throw new Error(`Invalid value: ${val} (must be a non-negative finite number)`);
       }
       
       links.push({

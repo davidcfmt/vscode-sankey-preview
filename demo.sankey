@@ -1,11 +1,52 @@
-Revenue --> Retail --> Online --> Mobile: 300
-Revenue --> Retail --> Store --> Cash: 200
-Revenue --> Cloud --> AWS --> Compute: 600
-Revenue --> Cloud --> Azure --> Storage: 400
-class Retail color:#FFDD00
-class Cloud color:#0099FF
-class Online color:#FF6B6B
-class Mobile color:#4ECDC4
-class Store color:#FFE66D
-class AWS color:#FF9F43
-class Azure color:#6C5CE7
+// Sankey Diagram Demo - Production Example
+// This demonstrates a real-world business scenario
+
+// E-commerce Revenue Flow
+Website --> Subscriptions --> Monthly: 5000
+Website --> Subscriptions --> Annual: 2000
+Website --> OneTime --> Products: 8000
+Website --> OneTime --> Services: 3000
+
+// Subscription Processing
+Monthly --> Processing --> Active: 4500
+Monthly --> Processing --> Churned: 500
+Annual --> Processing --> Active: 1800
+Annual --> Processing --> Churned: 200
+
+// Product Fulfillment
+Products --> Warehouse --> Shipped: 7200
+Products --> Warehouse --> Returned: 800
+Services --> Delivery --> Completed: 2700
+Services --> Delivery --> Cancelled: 300
+
+// Financial Flow
+Shipped --> Revenue --> Profit: 6000
+Shipped --> Revenue --> Costs: 1200
+Completed --> Revenue --> Profit: 2400
+Completed --> Revenue --> Costs: 300
+
+// Advanced styling with business colors
+class Website color:#3498DB
+class Subscriptions color:#2ECC71
+class OneTime color:#E67E22
+class Monthly color:#9B59B6
+class Annual color:#1ABC9C
+class Products color:#F39C12
+class Services color:#E74C3C
+class Processing color:#34495E
+class Active color:#27AE60
+class Churned color:#C0392B
+class Warehouse color:#8E44AD
+class Delivery color:#2980B9
+class Shipped color:#16A085
+class Returned color:#D35400
+class Completed color:#2ECC71
+class Cancelled color:#E74C3C
+class Revenue color:#F1C40F
+class Profit color:#27AE60
+class Costs color:#E74C3C
+
+// Business metrics in comments
+// Total Website Traffic: 18,000
+// Conversion Rate: 85%
+// Customer Satisfaction: 92%

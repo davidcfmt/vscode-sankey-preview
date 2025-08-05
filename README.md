@@ -1,71 +1,99 @@
+# Sankey Markdown Preview
 
-
-# A VS Code extension for creating and previewing beautiful Sankey diagrams directly in Markdown files and .sankey files with multi-layer support and professional styling.
+A VS Code extension that renders text-based Sankey diagrams in Markdown preview and standalone `.sankey` files.
 
 ## Features
 
-- ✨ **Multi-layer flows**: Support for unlimited depth chains like Revenue --> Retail --> Online --> Mobile: 300
-- 🎨 **Professional styling**: Beautiful gradients, shadows, and hover effects
-- - 📝 **Markdown integration**: Render Sankey diagrams in markdown preview
-- 🎯 **Dedicated .sankey files**: Full support for .sankey file format
-- 🌈 **Custom styling**: Color nodes with class NodeName color:#FF0000
-- 📊 **Interactive**: Hover effects and tooltips
-- 🔄 **Live preview**: Auto-updates on save
+✅ **Markdown Integration** - Render Sankey diagrams directly in Markdown preview using fenced code blocks  
+✅ **Multi-Layer Flows** - Support for complex flows like `A → B → C → D`  
+✅ **Custom Styling** - Color nodes with `class NodeName color:#RRGGBB`  
+✅ **Standalone Files** - Full preview support for `.sankey` files  
+✅ **Export Options** - Export diagrams as SVG or PNG  
+✅ **Syntax Highlighting** - Code highlighting for `.sankey` files  
 
-## Usage
+## Quick Start
 
 ### In Markdown Files
-Create a code block with sankey language:
 
-\`\`\`sankey
+Create a fenced code block with `sankey` language:
+
+````markdown
+```sankey
 Revenue --> Retail: 500
-Revenue --> Online: 300
-Retail --> Mobile: 200
-Online --> Mobile: 150
-class Revenue color:#2ecc71
-class Retail color:#3498db
-\`\`\`
+Revenue --> Cloud: 1000
+class Retail color:#FFDD00
+class Cloud color:#0099FF
+```
+````
 
-### In .sankey Files
-Open any .sankey file and use the command 'Open Sankey Preview'.
+### Multi-Layer Flows
+
+Chain multiple nodes with arrows:
+
+````markdown
+```sankey
+// Multi-layer flows
+Revenue --> Retail --> Online --> Mobile: 300
+Revenue --> Retail --> Store --> Cash: 200
+Revenue --> Cloud --> AWS --> Compute: 600
+Revenue --> Cloud --> Azure --> Storage: 400
+
+// Styling
+class Revenue color:#2ECC71
+class Retail color:#FFDD00
+class Cloud color:#0099FF
+class Online color:#FF6B6B
+class Mobile color:#4ECDC4
+class Store color:#FFE66D
+class AWS color:#FF9F43
+class Azure color:#6C5CE7
+```
+````
+
+### Standalone .sankey Files
+
+Create a `.sankey` file and use **Ctrl+Shift+P** → **"Open Sankey Preview"** for a dedicated preview pane.
 
 ## Syntax
 
-### Basic Flow
-NodeA --> NodeB: 100
+### Flow Syntax
+```
+Source --> Target: Value
+Source --> Intermediate --> Target: Value
+```
 
-### Multi-layer Flow
-Revenue --> Retail --> Store --> Cash: 300
-Revenue --> Online --> Mobile --> Apps: 200
-
-### Styling Nodes
-class NodeName color:#FF6B6B
-class \"Node With Spaces\" color:#4ECDC4
+### Styling Syntax
+```
+class NodeName color:#RRGGBB
+```
 
 ### Comments
+```
 // This is a comment
 %% This is also a comment
-
-## Installation
-
-1. Install from the VS Code Marketplace
-2. Open a markdown file or create a .sankey file
-3. Start creating beautiful flow diagrams!
+```
 
 ## Commands
 
-- Sankey: Open Preview - Open preview for .sankey files
-- Sankey: Export SVG - Export diagram as SVG
-- Sankey: Export PNG - Export diagram as PNG
+- **Sankey Preview: Show** - Open preview for `.sankey` files
+- **Sankey: Export SVG** - Export current diagram as SVG
+- **Sankey: Export PNG** - Export current diagram as PNG
 
 ## Requirements
 
-- VS Code 1.91.0 or higher
+- VS Code 1.91.0 or later
+- No external dependencies required
 
-## Contributing
+## Installation
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+1. Download the `.vsix` file from [Releases](https://github.com/davidcfmt/vscode-sankey-preview/releases)
+2. Run `code --install-extension sankey-markdown-preview-1.0.0.vsix`
+3. Reload VS Code
 
 ## License
 
-MIT - see LICENSE file for details."
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Issues and pull requests welcome at [GitHub](https://github.com/davidcfmt/vscode-sankey-preview).

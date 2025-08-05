@@ -2,7 +2,7 @@
   "name": "sankey-markdown-preview",
   "displayName": "Sankey Markdown Preview",
   "description": "Write and preview text-based Sankey diagrams inside Markdown and .sankey files with multi-layer support and professional styling.",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "publisher": "DavidCampbell",
   "author": {
     "name": "David Campbell",

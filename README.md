@@ -87,7 +87,7 @@ class NodeName color:#RRGGBB
 ## Installation
 
 1. Download the `.vsix` file from [Releases](https://github.com/davidcfmt/vscode-sankey-preview/releases)
-2. Run `code --install-extension sankey-markdown-preview-1.0.0.vsix`
+2. Run `code --install-extension sankey-markdown-preview-2.0.0.vsix`
 3. Reload VS Code
 
 ## License

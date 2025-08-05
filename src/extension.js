@@ -7,33 +7,87 @@ const diagCollection = vscode.languages.createDiagnosticCollection('sankey');
 
 function createWebviewHtml(panel, context, text) {
   const scriptUri = panel.webview.asWebviewUri(
-    vscode.Uri.joinPath(context.extensionUri, 'media', 'webview.js')
-  );
-  const d3Uri = panel.webview.asWebviewUri(
-    vscode.Uri.joinPath(context.extensionUri, 'media', 'd3.v7.min.js')
-  );
-  const sankeyUri = panel.webview.asWebviewUri(
-    vscode.Uri.joinPath(context.extensionUri, 'media', 'd3-sankey.min.js')
+    vscode.Uri.joinPath(context.extensionUri, 'media', 'preview.js')
   );
 
-  // Pass initial text via script tag with better CSP policy
   return /* html */ `<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sankey Preview</title>
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; style-src 'self' 'unsafe-inline'; img-src data:; script-src ${panel.webview.cspSource} 'unsafe-inline';">
-  <style>html,body{padding:0;margin:0;overflow:hidden;height:100%;}</style>
+        content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src ${panel.webview.cspSource} 'unsafe-inline';">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: var(--vscode-editor-background);
+      color: var(--vscode-editor-foreground);
+      height: 100vh;
+      overflow: hidden;
+    }
+    .sankey-container {
+      width: 100%;
+      height: calc(100vh - 40px);
+      border: 1px solid var(--vscode-panel-border);
+      border-radius: 8px;
+      background: var(--vscode-editor-background);
+      overflow: hidden;
+      position: relative;
+    }
+    #sankey-diagram {
+      width: 100%;
+      height: 100%;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--vscode-descriptionForeground);
+    }
+  </style>
 </head>
 <body>
-  <div id="root" style="width:100%;height:100%;">Loading...</div>
+  <div class="sankey-container">
+    <div id="sankey-diagram" class="loading">Loading Sankey diagram...</div>
+  </div>
   <script>
-    console.log('Extension debug: Setting initial text');
-    window.__INITIAL_TEXT__ = ${JSON.stringify(text || '')};
-    console.log('Extension debug: Initial text length:', window.__INITIAL_TEXT__.length);
+    // Store the content for the renderer
+    window.__SANKEY_CONTENT__ = ${JSON.stringify(text || '')};
+    
+    // Initialize when script loads
+    window.addEventListener('load', function() {
+      const container = document.getElementById('sankey-diagram');
+      container.className = ''; // Remove loading class
+      
+      if (window.renderSankeyFromText && window.__SANKEY_CONTENT__) {
+        try {
+          window.renderSankeyFromText(window.__SANKEY_CONTENT__, container);
+        } catch (error) {
+          console.error('Error rendering Sankey:', error);
+          container.innerHTML = '<div style="color: red; padding: 20px;"><h3>Error rendering Sankey diagram:</h3><pre>' + error.message + '</pre></div>';
+        }
+      } else {
+        container.innerHTML = '<div style="color: orange; padding: 20px;">Sankey renderer not available</div>';
+      }
+    });
+    
+    // Handle updates from VS Code
+    window.addEventListener('message', function(event) {
+      const message = event.data;
+      if (message.type === 'update' && message.text) {
+        const container = document.getElementById('sankey-diagram');
+        window.__SANKEY_CONTENT__ = message.text;
+        if (window.renderSankeyFromText) {
+          container.innerHTML = '';
+          window.renderSankeyFromText(message.text, container);
+        }
+      }
+    });
   </script>
-  <script src="${d3Uri}"></script>
-  <script src="${sankeyUri}"></script>
   <script src="${scriptUri}"></script>
 </body>
 </html>`;

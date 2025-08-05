@@ -2,6 +2,30 @@
 
 All notable changes to the "sankey-markdown-preview" extension will be documented in this file.
 
+## [2.0.2] - 2025-08-04
+
+### 🐛 **Critical Bug Fix**
+- **Fixed "layoutSankey is not defined" error**: Resolved undefined function error in .sankey file rendering
+- **Simplified rendering pipeline**: Now uses the existing proven `drawSankey` function for consistency
+- **Improved error handling**: Better error messages for debugging rendering issues
+
+---
+
+## [2.0.1] - 2025-08-04
+
+### 🐛 **Bug Fixes**
+- **Fixed .sankey file preview**: Resolved "loading" issue where .sankey files wouldn't render
+- **Unified rendering system**: Both Markdown preview and .sankey files now use the same inline renderer
+- **Improved error handling**: Better error messages and fallbacks for rendering issues
+- **Enhanced webview integration**: Fixed script loading and message passing between VS Code and webview
+
+### 🔧 **Technical Improvements**
+- **Consistent preview experience**: Markdown and .sankey files now have identical rendering behavior
+- **Better CSP compliance**: Improved Content Security Policy handling
+- **Streamlined dependencies**: Removed references to unused external D3 files
+
+---
+
 ## [2.0.0] - 2025-08-04
 
 ### 🚀 Major Release - Breaking Changes

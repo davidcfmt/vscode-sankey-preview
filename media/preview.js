@@ -363,4 +363,27 @@
   document.addEventListener('DOMContentLoaded', processBlocks);
   setTimeout(processBlocks, 100);
   setTimeout(processBlocks, 500);
+
+  // Export function for .sankey file rendering
+  window.renderSankeyFromText = function(content, container) {
+    try {
+      console.log('Rendering Sankey from text:', content.substring(0, 100) + '...');
+      
+      // Use the existing drawSankey function
+      drawSankey(content, container);
+      
+      console.log('Sankey diagram rendered successfully for .sankey file');
+      return true;
+      
+    } catch (error) {
+      console.error('Error rendering Sankey diagram:', error);
+      container.innerHTML = `<div style="color: red; padding: 20px; font-family: var(--vscode-font-family);">
+        <h3>Error rendering Sankey diagram:</h3>
+        <pre style="background: var(--vscode-textCodeBlock-background); padding: 10px; border-radius: 4px;">${error.message}</pre>
+        <p>Please check your .sankey file syntax.</p>
+      </div>`;
+      return false;
+    }
+  };
+
 })();

@@ -2,6 +2,15 @@
 
 All notable changes to the "sankey-markdown-preview" extension will be documented in this file.
 
+## [2.1.1] - 2026-06-20
+
+### Changed
+- Improved Marketplace README presentation with badges, a preview image, feature summary, comparison guidance, and richer examples.
+- Expanded Marketplace keywords and package description for better discovery.
+- Stopped tracking generated dependency and package artifacts in Git.
+
+---
+
 ## [2.1.0] - 2026-06-18
 
 ### Added

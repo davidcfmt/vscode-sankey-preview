@@ -2,7 +2,7 @@
   "name": "sankey-markdown-preview",
   "displayName": "Sankey Markdown Preview",
   "description": "Write offline D3 Sankey flow diagrams in Markdown and .sankey files, with SVG/PNG export and Mermaid portability.",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "publisher": "DavidCampbell",
   "author": {
     "name": "David Campbell",

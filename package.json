@@ -1,7 +1,7 @@
 {
   "name": "sankey-markdown-preview",
   "displayName": "Sankey Markdown Preview",
-  "description": "Write and preview text-based Sankey diagrams inside Markdown and .sankey files with multi-layer support and professional styling.",
+  "description": "Write offline D3 Sankey flow diagrams in Markdown and .sankey files, with SVG/PNG export and Mermaid portability.",
   "version": "2.1.0",
   "publisher": "DavidCampbell",
   "author": {
@@ -27,13 +27,28 @@
   ],
   "keywords": [
     "sankey",
+    "sankey-diagram",
     "diagram",
     "markdown",
+    "markdown-preview",
     "visualization",
+    "data-visualization",
     "flow",
+    "flow-diagram",
     "chart",
     "d3",
-    "preview"
+    "d3-sankey",
+    "mermaid",
+    "diagram-as-code",
+    "preview",
+    "research",
+    "documentation",
+    "energy-flow",
+    "material-flow",
+    "budget",
+    "revenue-flow",
+    "svg-export",
+    "png-export"
   ],
   "icon": "media/icon.png",
   "galleryBanner": {

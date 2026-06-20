@@ -4,6 +4,7 @@ test*.md
 test*.html
 tests/
 demo.sankey
+docs/
 INSTRUCTIONS.md
 SECURITY.md
 src/previewRenderer.js

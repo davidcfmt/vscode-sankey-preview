@@ -1,8 +1,26 @@
 # Sankey Markdown Preview
 
+[![Version](https://img.shields.io/visual-studio-marketplace/v/DavidCampbell.sankey-markdown-preview)](https://marketplace.visualstudio.com/items?itemName=DavidCampbell.sankey-markdown-preview)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/DavidCampbell.sankey-markdown-preview)](https://marketplace.visualstudio.com/items?itemName=DavidCampbell.sankey-markdown-preview)
+[![Rating](https://img.shields.io/visual-studio-marketplace/stars/DavidCampbell.sankey-markdown-preview)](https://marketplace.visualstudio.com/items?itemName=DavidCampbell.sankey-markdown-preview&ssr=false#review-details)
+[![License](https://img.shields.io/github/license/davidcfmt/vscode-sankey-preview)](LICENSE)
+
 A VS Code extension for writing Sankey flow diagrams directly beside Markdown research notes and in standalone `.sankey` files.
 
 The extension renders only explicit `sankey` fenced code blocks in Markdown preview. It does not take over `mermaid` fences or generic code blocks, so it stays compatible with Mermaid-oriented authoring and other Markdown extensions.
+
+![Sankey Markdown Preview showing Markdown source and rendered diagram](media/marketplace-preview.png)
+
+## Features
+
+- Friendly Markdown syntax for Sankey diagrams as code
+- Local, offline rendering with bundled `d3-sankey`
+- Explicit `sankey` fenced code blocks in Markdown preview
+- Standalone `.sankey` file preview
+- SVG and PNG export from the preview toolbar
+- Copy as Mermaid `sankey-beta` for GitHub and Mermaid-compatible docs
+- Optional title, unit, value formatting, link color, node alignment, and node colors
+- Balance warnings for intermediate nodes where flow does not add up
 
 ## When to use Sankey
 
@@ -19,6 +37,16 @@ Sankey diagrams are less useful for ordinary process order, dependency topology,
 - Graphviz for dependency graphs and network structure
 - Alluvial-style flow charts for categorical transitions over stages
 - Vega, Plotly, or a data app when the chart needs dashboard-level interaction
+
+## Why This Instead of Mermaid Sankey?
+
+Mermaid is the right target when portability is the top priority. This extension is meant for authoring and reviewing Sankey diagrams inside VS Code:
+
+- Write `Source --> Target: 123` instead of Mermaid's CSV rows.
+- Keep rich local preview controls without taking over existing `mermaid` blocks.
+- Export SVG/PNG directly from the preview.
+- Copy Mermaid `sankey-beta` when you need GitHub or static-site portability.
+- Stay offline by default with no CDN, Kroki, or remote rendering service.
 
 ## Quick Start
 
@@ -41,6 +69,45 @@ class Lab color:#5c7fbd
 ````
 
 Open Markdown preview to see the rendered diagram. In `.sankey` files, run **Open Sankey Preview** from the command palette for a dedicated preview pane.
+
+## Example Use Cases
+
+### Energy Flow
+
+```sankey
+title: Home energy flow
+unit: kWh
+linkColor: gradient
+
+Solar --> Battery: 18
+Solar --> Grid: 6
+Battery --> Home: 14
+Grid --> Home: 4
+```
+
+### Budget Allocation
+
+```sankey
+title: Project budget
+unit: USD
+valueFormat: compact
+
+Grant --> Research: 42000
+Grant --> Equipment: 18000
+Grant --> Publication: 9000
+```
+
+### Funnel Drop-Off
+
+```sankey
+title: Trial funnel
+unit: users
+valueFormat: integer
+
+Visitors --> Trial signups: 1200
+Trial signups --> Activated: 640
+Activated --> Paid: 180
+```
 
 ## Syntax
 

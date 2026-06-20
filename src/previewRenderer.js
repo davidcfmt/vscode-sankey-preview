@@ -699,8 +699,11 @@ function renderStandalone() {
   return true;
 }
 
-function renderMarkdownBlocks() {
-  const blocks = Array.from(document.querySelectorAll('pre > code.language-sankey'));
+function getMarkdownSankeyBlocks() {
+  return Array.from(document.querySelectorAll('pre > code.language-sankey'));
+}
+
+function renderMarkdownBlocks(blocks) {
   blocks.forEach((code) => {
     if (code.dataset.sankeyRendered === 'true') {
       return;
@@ -715,9 +718,15 @@ function renderMarkdownBlocks() {
 }
 
 function start() {
-  injectStyles();
-  if (!renderStandalone()) {
-    renderMarkdownBlocks();
+  if (renderStandalone()) {
+    injectStyles();
+    return;
+  }
+
+  const blocks = getMarkdownSankeyBlocks();
+  if (blocks.length > 0) {
+    injectStyles();
+    renderMarkdownBlocks(blocks);
   }
 }
 

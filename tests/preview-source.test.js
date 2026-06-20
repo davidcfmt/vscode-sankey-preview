@@ -22,6 +22,12 @@ test('Markdown preview only targets explicit sankey fences', () => {
   assert.doesNotMatch(previewSource, /textContent\s*\|\|\s*['"`][\s\S]*-->/);
 });
 
+test('plain Markdown previews are left untouched when no sankey fence exists', () => {
+  assert.match(previewSource, /const blocks = getMarkdownSankeyBlocks\(\);/);
+  assert.match(previewSource, /if \(blocks\.length > 0\) \{\s*injectStyles\(\);\s*renderMarkdownBlocks\(blocks\);/);
+  assert.doesNotMatch(previewSource, /function start\(\) \{\s*injectStyles\(\);/);
+});
+
 test('renderer and extension do not use innerHTML user-content sinks', () => {
   assert.doesNotMatch(previewSource, /\.innerHTML\b/);
   assert.doesNotMatch(extensionSource, /\.innerHTML\b/);

@@ -2,6 +2,14 @@
 
 All notable changes to the "sankey-markdown-preview" extension will be documented in this file.
 
+## [2.1.2] - 2026-06-20
+
+### Fixed
+- Prevented the Markdown preview script from touching ordinary Markdown previews unless an explicit `sankey` fence is present.
+- Removed automatic extension activation for standard Markdown documents.
+
+---
+
 ## [2.1.1] - 2026-06-20
 
 ### Changed

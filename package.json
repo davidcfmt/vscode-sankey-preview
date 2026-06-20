@@ -2,7 +2,7 @@
   "name": "sankey-markdown-preview",
   "displayName": "Sankey Markdown Preview",
   "description": "Write and preview text-based Sankey diagrams inside Markdown and .sankey files with multi-layer support and professional styling.",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "publisher": "DavidCampbell",
   "author": {
     "name": "David Campbell",
@@ -10,27 +10,27 @@
   },
   "license": "MIT",
   "repository": {
-    "type": "git", 
+    "type": "git",
     "url": "https://github.com/davidcfmt/vscode-sankey-preview.git"
   },
   "bugs": {
     "url": "https://github.com/davidcfmt/vscode-sankey-preview/issues"
   },
   "homepage": "https://github.com/davidcfmt/vscode-sankey-preview#readme",
-  "engines": { 
-    "vscode": "^1.91.0" 
+  "engines": {
+    "vscode": "^1.91.0"
   },
-  "categories": [ 
-    "Other", 
-    "Visualization", 
-    "Programming Languages" 
+  "categories": [
+    "Other",
+    "Visualization",
+    "Programming Languages"
   ],
-  "keywords": [ 
-    "sankey", 
-    "diagram", 
-    "markdown", 
-    "visualization", 
-    "flow", 
+  "keywords": [
+    "sankey",
+    "diagram",
+    "markdown",
+    "visualization",
+    "flow",
     "chart",
     "d3",
     "preview"
@@ -47,7 +47,15 @@
   "main": "./src/extension.js",
   "contributes": {
     "languages": [
-      { "id": "sankey", "aliases": ["Sankey"], "extensions": [".sankey"] }
+      {
+        "id": "sankey",
+        "aliases": [
+          "Sankey"
+        ],
+        "extensions": [
+          ".sankey"
+        ]
+      }
     ],
     "grammars": [
       {
@@ -57,12 +65,28 @@
       }
     ],
     "snippets": [
-      { "language": "sankey", "path": "./snippets/sankey.code-snippets" }
+      {
+        "language": "sankey",
+        "path": "./snippets/sankey.code-snippets"
+      }
     ],
     "commands": [
-      { "command": "sankeyPreview.show", "title": "Open Sankey Preview" },
-      { "command": "sankeyPreview.exportSvg", "title": "Sankey: Export SVG" },
-      { "command": "sankeyPreview.exportPng", "title": "Sankey: Export PNG" }
+      {
+        "command": "sankeyPreview.show",
+        "title": "Open Sankey Preview"
+      },
+      {
+        "command": "sankeyPreview.exportSvg",
+        "title": "Sankey: Export SVG"
+      },
+      {
+        "command": "sankeyPreview.exportPng",
+        "title": "Sankey: Export PNG"
+      },
+      {
+        "command": "sankeyPreview.copyMermaid",
+        "title": "Sankey: Copy as Mermaid Sankey"
+      }
     ],
     "keybindings": [
       {
@@ -101,12 +125,17 @@
     }
   },
   "scripts": {
+    "build": "esbuild src/previewRenderer.js --bundle --format=iife --target=es2020 --outfile=media/preview.js",
     "lint": "eslint src --ext .js",
-    "package": "vsce package"
+    "test": "node tests/parser.test.js && node tests/preview-source.test.js",
+    "vscode:prepublish": "npm run build",
+    "package": "npm run build && vsce package"
   },
   "devDependencies": {
     "@types/vscode": "^1.91.0",
-    "eslint": "^8.57.0",
-    "vsce": "^2.15.0"
+    "@vscode/vsce": "^3.9.2",
+    "d3-sankey": "^0.12.3",
+    "esbuild": "^0.28.1",
+    "eslint": "^8.57.0"
   }
 }

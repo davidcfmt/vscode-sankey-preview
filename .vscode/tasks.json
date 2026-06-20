@@ -2,6 +2,13 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "npm: build",
+			"type": "npm",
+			"script": "build",
+			"group": "build",
+			"problemMatcher": []
+		},
+		{
 			"label": "Launch Extension",
 			"type": "shell",
 			"command": "code",

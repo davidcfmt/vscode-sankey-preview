@@ -1,118 +1,242 @@
-// Very small, fast, zero-dependency parser
-function parseSankey(text) {
-  if (!text || typeof text !== 'string') {
-    throw new Error('No text provided or text is not a string');
+const DEFAULT_LIMITS = {
+  maxInputSize: 100000,
+  maxNodes: 1000,
+  maxLinks: 5000
+};
+
+const MAX_NODE_NAME_LENGTH = 100;
+const LINK_COLOR_VALUES = new Set(['source', 'target', 'gradient']);
+const NODE_ALIGN_VALUES = new Set(['left', 'right', 'center', 'justify']);
+const VALUE_FORMAT_VALUES = new Set(['raw', 'integer', 'decimal', 'compact']);
+const METADATA_KEYS = new Set(['title', 'unit', 'valueFormat', 'linkColor', 'nodeAlign']);
+
+function normalizeLimits(limits = {}) {
+  return {
+    maxInputSize: Number.isFinite(limits.maxInputSize) && limits.maxInputSize > 0
+      ? limits.maxInputSize
+      : DEFAULT_LIMITS.maxInputSize,
+    maxNodes: Number.isFinite(limits.maxNodes) && limits.maxNodes > 0
+      ? limits.maxNodes
+      : DEFAULT_LIMITS.maxNodes,
+    maxLinks: Number.isFinite(limits.maxLinks) && limits.maxLinks > 0
+      ? limits.maxLinks
+      : DEFAULT_LIMITS.maxLinks
+  };
+}
+
+function parserError(message, lineNumber) {
+  const error = new Error(lineNumber ? `line ${lineNumber}: ${message}` : message);
+  if (lineNumber) {
+    error.line = lineNumber;
+  }
+  return error;
+}
+
+function stripOptionalQuotes(value) {
+  const trimmed = value.trim();
+  const match = trimmed.match(/^"(.*)"$/);
+  return match ? match[1].replace(/\\"/g, '"') : trimmed;
+}
+
+function validateNodeName(name, role, lineNumber) {
+  if (!name || name.length > MAX_NODE_NAME_LENGTH) {
+    throw parserError(
+      `Invalid ${role} node name (must be 1-${MAX_NODE_NAME_LENGTH} characters)`,
+      lineNumber
+    );
+  }
+}
+
+function parseNumber(value, lineNumber) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue) || numericValue < 0) {
+    throw parserError(`Invalid value: ${value} (must be a non-negative finite number)`, lineNumber);
+  }
+  return numericValue;
+}
+
+function validateHexColor(value, lineNumber, fieldName) {
+  if (!/^#[0-9a-f]{3}(?:[0-9a-f]{3})?(?:[0-9a-f]{2})?$/i.test(value)) {
+    throw parserError(`${fieldName} must be source, target, gradient, or a #RRGGBB color`, lineNumber);
+  }
+}
+
+function parseOption(line, options, warnings, lineNumber) {
+  const match = line.match(/^([A-Za-z][\w-]*)\s*:\s*(.*?)\s*$/);
+  if (!match) {
+    return false;
   }
 
-  // Add input size limits to prevent DoS attacks
-  if (text.length > 100000) { // 100KB limit
-    throw new Error('Input too large (maximum 100KB)');
+  const key = match[1];
+  const value = match[2];
+  if (key === 'linkColor') {
+    if (!LINK_COLOR_VALUES.has(value)) {
+      validateHexColor(value, lineNumber, 'linkColor');
+    }
+  } else if (key === 'nodeAlign') {
+    if (!NODE_ALIGN_VALUES.has(value)) {
+      throw parserError('nodeAlign must be left, right, center, or justify', lineNumber);
+    }
+  } else if (key === 'valueFormat') {
+    if (!VALUE_FORMAT_VALUES.has(value)) {
+      throw parserError('valueFormat must be raw, integer, decimal, or compact', lineNumber);
+    }
+  } else if (!METADATA_KEYS.has(key)) {
+    warnings.push({
+      line: lineNumber,
+      message: `Unknown option "${key}" will be ignored by the preview renderer`
+    });
   }
 
-  const nodes = [];
+  options[key] = value;
+  return true;
+}
+
+function parseClass(line, styles, lineNumber) {
+  const quotedMatch = line.match(/^class\s+"((?:\\"|[^"])+)"\s+(.+)$/);
+  const unquotedMatch = line.match(/^class\s+(\S+)\s+(.+)$/);
+
+  let node;
+  let rest;
+  if (quotedMatch) {
+    [, node, rest] = quotedMatch;
+    node = node.replace(/\\"/g, '"');
+  } else if (unquotedMatch) {
+    [, node, rest] = unquotedMatch;
+  } else {
+    throw parserError('Invalid class syntax. Use: class NodeName color:#RRGGBB', lineNumber);
+  }
+
+  validateNodeName(node, 'class', lineNumber);
+  const colorMatch = rest.match(/color\s*:\s*(#[0-9a-f]{3}(?:[0-9a-f]{3})?(?:[0-9a-f]{2})?)/i);
+  if (!colorMatch) {
+    throw parserError('Class styles currently support color:#RRGGBB only', lineNumber);
+  }
+
+  const color = colorMatch[1];
+  validateHexColor(color, lineNumber, 'color');
+  styles[node] = { color };
+}
+
+function createNodeIndex(nodes, maxNodes) {
   const index = new Map();
-  const links = [];
-  const styles = {};
-  const options = {};
-
-  // Limit number of nodes to prevent memory exhaustion
-  const MAX_NODES = 1000;
-  const MAX_LINKS = 5000;
-
-  const get = (name) => {
+  return (name, lineNumber) => {
     if (!index.has(name)) {
-      if (nodes.length >= MAX_NODES) {
-        throw new Error(`Too many nodes (maximum ${MAX_NODES})`);
+      if (nodes.length >= maxNodes) {
+        throw parserError(`Too many nodes (maximum ${maxNodes})`, lineNumber);
       }
       index.set(name, nodes.length);
       nodes.push({ id: name });
     }
-    return index.get(name);
+    return name;
   };
-
-  const lines = text.split(/\r?\n/);
-  for (const raw of lines) {
-    const line = raw.trim();
-    if (!line || line.startsWith('//') || line.startsWith('%%')) continue;
-
-    // class Node color:#RRGGBB (supports quoted names: class "South Africa" color:#FF0000)
-    if (line.startsWith('class ')) {
-      const quotedMatch = line.match(/^class\s+"([^"]+)"\s+(.+)$/);
-      const unquotedMatch = line.match(/^class\s+(\S+)\s+(.+)$/);
-      
-      let node, rest;
-      if (quotedMatch) {
-        [, node, rest] = quotedMatch;
-      } else if (unquotedMatch) {
-        [, node, rest] = unquotedMatch;
-      }
-      
-      const colorMatch = rest?.match(/color\s*:\s*(#[0-9a-f]{3,8})/i);
-      if (node && colorMatch) {
-        // Validate color format
-        const color = colorMatch[1];
-        if (color && /^#[0-9a-f]{3,8}$/i.test(color)) {
-          styles[node] = { color: color };
-        }
-      }
-      continue;
-    }
-
-    // Global option  key: value
-    if (!line.includes('-->') && line.includes(':')) {
-      const [k, v] = line.split(':', 2);
-      options[k.trim()] = v.trim();
-      continue;
-    }
-
-    // Link  A --> B: 123 "optional label"
-    // Multi-layer: A --> B --> C --> D: 123 "optional label"
-    const match = line.match(/^(.+?):\s*([\d.]+)(?:\s+"(.+?)")?$/);
-    if (!match) throw new Error(`Syntax error: ${line}`);
-    const [, pathString, val, lbl] = match;
-
-    // Split the path by --> to get all nodes in the chain
-    const pathNodes = pathString.split('-->').map(node => node.trim());
-    
-    if (pathNodes.length < 2) {
-      throw new Error(`Path must have at least 2 nodes: ${line}`);
-    }
-
-    // Create links for each step in the chain
-    for (let i = 0; i < pathNodes.length - 1; i++) {
-      if (links.length >= MAX_LINKS) {
-        throw new Error(`Too many links (maximum ${MAX_LINKS})`);
-      }
-      
-      const source = pathNodes[i].replace(/^"(.*)"$/, '$1'); // Remove quotes if present
-      const target = pathNodes[i + 1].replace(/^"(.*)"$/, '$1'); // Remove quotes if present
-      
-      // Validate and sanitize node names
-      if (!source || source.length === 0 || source.length > 100) {
-        throw new Error(`Invalid source node name: ${source} (must be 1-100 characters)`);
-      }
-      if (!target || target.length === 0 || target.length > 100) {
-        throw new Error(`Invalid target node name: ${target} (must be 1-100 characters)`);
-      }
-      
-      // Validate numeric value
-      const numericValue = parseFloat(val);
-      if (isNaN(numericValue) || numericValue < 0 || !isFinite(numericValue)) {
-        throw new Error(`Invalid value: ${val} (must be a non-negative finite number)`);
-      }
-      
-      links.push({
-        source: get(source),
-        target: get(target),
-        value: numericValue,
-        label: i === pathNodes.length - 2 ? lbl : undefined // Only add label to the final link
-      });
-    }
-  }
-
-  // Apply styles
-  nodes.forEach((n) => Object.assign(n, styles[n.id] || {}));
-  return { nodes, links, options };
 }
 
-module.exports = { parseSankey };
+function parseSankey(text, limits) {
+  const { maxInputSize, maxNodes, maxLinks } = normalizeLimits(limits);
+
+  if (!text || typeof text !== 'string') {
+    throw new Error('No text provided or text is not a string');
+  }
+
+  if (text.length > maxInputSize) {
+    throw new Error(`Input too large (maximum ${maxInputSize} bytes)`);
+  }
+
+  const nodes = [];
+  const links = [];
+  const styles = {};
+  const options = {};
+  const warnings = [];
+  const getNode = createNodeIndex(nodes, maxNodes);
+
+  const lines = text.split(/\r?\n/);
+  lines.forEach((raw, index) => {
+    const lineNumber = index + 1;
+    const line = raw.trim();
+    if (!line || line.startsWith('//') || line.startsWith('%%')) {
+      return;
+    }
+
+    if (line.startsWith('class ')) {
+      parseClass(line, styles, lineNumber);
+      return;
+    }
+
+    if (!line.includes('-->') && line.includes(':') && parseOption(line, options, warnings, lineNumber)) {
+      return;
+    }
+
+    const match = line.match(/^(.+?):\s*([+-]?(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?)(?:\s+"((?:\\"|[^"])+)")?\s*$/i);
+    if (!match) {
+      throw parserError(`Syntax error: ${line}`, lineNumber);
+    }
+
+    const [, pathString, value, label] = match;
+    const pathNodes = pathString.split('-->').map(stripOptionalQuotes);
+    if (pathNodes.length < 2) {
+      throw parserError(`Path must have at least 2 nodes: ${line}`, lineNumber);
+    }
+
+    const numericValue = parseNumber(value, lineNumber);
+    for (let i = 0; i < pathNodes.length - 1; i++) {
+      if (links.length >= maxLinks) {
+        throw parserError(`Too many links (maximum ${maxLinks})`, lineNumber);
+      }
+
+      const source = pathNodes[i];
+      const target = pathNodes[i + 1];
+      validateNodeName(source, 'source', lineNumber);
+      validateNodeName(target, 'target', lineNumber);
+
+      links.push({
+        source: getNode(source, lineNumber),
+        target: getNode(target, lineNumber),
+        value: numericValue,
+        label: i === pathNodes.length - 2 && label ? label.replace(/\\"/g, '"') : undefined,
+        line: lineNumber
+      });
+    }
+  });
+
+  nodes.forEach((node) => Object.assign(node, styles[node.id] || {}));
+  return { nodes, links, options, warnings };
+}
+
+function csvField(value) {
+  const text = String(value ?? '');
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function formatMermaidNumber(value) {
+  return Number.isInteger(value) ? String(value) : String(Number(value));
+}
+
+function toMermaidSankey(input, limits, options = {}) {
+  const parsed = typeof input === 'string' ? parseSankey(input, limits) : input;
+  const lines = ['sankey-beta', 'source,target,value'];
+  parsed.links.forEach((link) => {
+    lines.push([
+      csvField(link.source),
+      csvField(link.target),
+      formatMermaidNumber(link.value)
+    ].join(','));
+  });
+
+  const body = lines.join('\n');
+  if (options.fenced === false) {
+    return body;
+  }
+  return `\`\`\`mermaid\n${body}\n\`\`\``;
+}
+
+module.exports = {
+  DEFAULT_LIMITS,
+  LINK_COLOR_VALUES,
+  METADATA_KEYS,
+  NODE_ALIGN_VALUES,
+  VALUE_FORMAT_VALUES,
+  normalizeLimits,
+  parseSankey,
+  toMermaidSankey
+};

@@ -2,6 +2,24 @@
 
 All notable changes to the "sankey-markdown-preview" extension will be documented in this file.
 
+## [2.1.0] - 2026-06-18
+
+### Added
+- Bundled `d3-sankey` layout for local/offline rendering.
+- Added top-level diagram settings: `title`, `unit`, `valueFormat`, `linkColor`, and `nodeAlign`.
+- Added **Sankey: Copy as Mermaid Sankey** command and preview toolbar action.
+- Added preview toolbar actions for SVG export, PNG export, zoom, pan, and reset.
+- Added balance warnings for intermediate nodes whose incoming and outgoing totals differ.
+- Added parser and preview regression tests for metadata, Mermaid CSV escaping, limits, and explicit Markdown fence rendering.
+
+### Changed
+- Markdown preview now renders only explicit `sankey` fenced code blocks.
+- Generic code blocks containing `-->` are no longer auto-rendered.
+- `.sankey` webviews use a tighter CSP with nonce-based script loading.
+- Documentation now positions the extension as a focused flow-diagram tool for research notes.
+
+---
+
 ## [2.0.2] - 2025-08-04
 
 ### 🐛 **Critical Bug Fix**

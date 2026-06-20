@@ -1,14 +1,48 @@
 const vscode = require('vscode');
 const path = require('path');
 const fs = require('fs');
-const { parseSankey } = require('./parser');
+const { DEFAULT_LIMITS, parseSankey, toMermaidSankey } = require('./parser');
 
 const diagCollection = vscode.languages.createDiagnosticCollection('sankey');
 
-function createWebviewHtml(panel, context, text) {
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getNonce() {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (let i = 0; i < 32; i++) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}
+
+function getPositiveNumberConfig(config, key, fallback) {
+  const value = config.get(key, fallback);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+}
+
+function getParserLimits() {
+  const config = vscode.workspace.getConfiguration('sankeyPreview');
+  return {
+    maxInputSize: getPositiveNumberConfig(config, 'maxInputSize', DEFAULT_LIMITS.maxInputSize),
+    maxNodes: getPositiveNumberConfig(config, 'maxNodes', DEFAULT_LIMITS.maxNodes),
+    maxLinks: getPositiveNumberConfig(config, 'maxLinks', DEFAULT_LIMITS.maxLinks)
+  };
+}
+
+function createWebviewHtml(panel, context, text, limits = DEFAULT_LIMITS) {
   const scriptUri = panel.webview.asWebviewUri(
     vscode.Uri.joinPath(context.extensionUri, 'media', 'preview.js')
   );
+  const nonce = getNonce();
+  const initialText = escapeHtml(text || '');
 
   return /* html */ `<!DOCTYPE html>
 <html lang="en">
@@ -17,7 +51,7 @@ function createWebviewHtml(panel, context, text) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sankey Preview</title>
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src ${panel.webview.cspSource} 'unsafe-inline';">
+        content="default-src 'none'; img-src data: blob: ${panel.webview.cspSource}; style-src ${panel.webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -52,43 +86,13 @@ function createWebviewHtml(panel, context, text) {
 </head>
 <body>
   <div class="sankey-container">
-    <div id="sankey-diagram" class="loading">Loading Sankey diagram...</div>
+    <div id="sankey-diagram" class="loading"
+         data-max-input-size="${limits.maxInputSize}"
+         data-max-nodes="${limits.maxNodes}"
+         data-max-links="${limits.maxLinks}">Loading Sankey diagram...</div>
+    <textarea id="sankey-source" hidden readonly>${initialText}</textarea>
   </div>
-  <script>
-    // Store the content for the renderer
-    window.__SANKEY_CONTENT__ = ${JSON.stringify(text || '')};
-    
-    // Initialize when script loads
-    window.addEventListener('load', function() {
-      const container = document.getElementById('sankey-diagram');
-      container.className = ''; // Remove loading class
-      
-      if (window.renderSankeyFromText && window.__SANKEY_CONTENT__) {
-        try {
-          window.renderSankeyFromText(window.__SANKEY_CONTENT__, container);
-        } catch (error) {
-          console.error('Error rendering Sankey:', error);
-          container.innerHTML = '<div style="color: red; padding: 20px;"><h3>Error rendering Sankey diagram:</h3><pre>' + error.message + '</pre></div>';
-        }
-      } else {
-        container.innerHTML = '<div style="color: orange; padding: 20px;">Sankey renderer not available</div>';
-      }
-    });
-    
-    // Handle updates from VS Code
-    window.addEventListener('message', function(event) {
-      const message = event.data;
-      if (message.type === 'update' && message.text) {
-        const container = document.getElementById('sankey-diagram');
-        window.__SANKEY_CONTENT__ = message.text;
-        if (window.renderSankeyFromText) {
-          container.innerHTML = '';
-          window.renderSankeyFromText(message.text, container);
-        }
-      }
-    });
-  </script>
-  <script src="${scriptUri}"></script>
+  <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
 }
@@ -99,18 +103,23 @@ function openPreview(doc, context) {
       'sankeyPreview',
       `Sankey: ${path.basename(doc.uri.fsPath)}`,
       vscode.ViewColumn.Beside,
-      { enableScripts: true, retainContextWhenHidden: true }
+      {
+        enableScripts: true,
+        localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'media')]
+      }
     );
     
     const text = doc.getText();
-    console.log('Document text length:', text?.length);
-    console.log('Document text preview:', text?.substring(0, 100));
-    panel.webview.html = createWebviewHtml(panel, context, text || '');
+    const limits = getParserLimits();
+    panel.webview.html = createWebviewHtml(panel, context, text || '', limits);
 
     // Update on save
     const saveSub = vscode.workspace.onDidSaveTextDocument((d) => {
       if (d === doc) {
         try {
+          if (vscode.workspace.getConfiguration('sankeyPreview').get('autoRefresh', true) === false) {
+            return;
+          }
           const newText = d.getText();
           panel.webview.postMessage({ type: 'update', text: newText });
         } catch (error) {
@@ -147,6 +156,13 @@ function openPreview(doc, context) {
               vscode.window.showErrorMessage(`Export failed: ${error.message}`);
             }
           }
+        } else if (msg.type === 'copyMermaid' && typeof msg.data === 'string') {
+          if (msg.data.length > 1024 * 1024) {
+            vscode.window.showErrorMessage('Mermaid export too large');
+            return;
+          }
+          await vscode.env.clipboard.writeText(msg.data);
+          vscode.window.showInformationMessage('Copied Mermaid Sankey to clipboard');
         }
       } catch (error) {
         console.error('Error handling webview message:', error);
@@ -165,22 +181,47 @@ function validateDocument(doc) {
   if (doc.languageId !== 'sankey') return;
   const diagnostics = [];
   try {
-    parseSankey(doc.getText());
+    parseSankey(doc.getText(), getParserLimits());
   } catch (err) {
-    const line = err.message.match(/line (\d+)/)?.[1] ?? 0;
+    const messageLine = err.message.match(/line (\d+)/)?.[1];
+    const line = Math.max(0, Number(err.line || messageLine || 1) - 1);
     const severity = err.message.includes('too large') || err.message.includes('Too many') 
       ? vscode.DiagnosticSeverity.Warning 
       : vscode.DiagnosticSeverity.Error;
     
     diagnostics.push(
       new vscode.Diagnostic(
-        new vscode.Range(+line, 0, +line, 1),
+        new vscode.Range(line, 0, line, 1),
         err.message,
         severity
       )
     );
   }
   diagCollection.set(doc.uri, diagnostics);
+}
+
+async function copyActiveDocumentAsMermaid() {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showErrorMessage('Open a .sankey file or select Sankey source in Markdown first.');
+    return;
+  }
+
+  const doc = editor.document;
+  const hasSelection = !editor.selection.isEmpty;
+  if (doc.languageId !== 'sankey' && !hasSelection) {
+    vscode.window.showErrorMessage('Select Sankey source in Markdown, or open a .sankey file first.');
+    return;
+  }
+
+  const text = hasSelection ? doc.getText(editor.selection) : doc.getText();
+  try {
+    const mermaid = toMermaidSankey(text, getParserLimits(), { fenced: true });
+    await vscode.env.clipboard.writeText(mermaid);
+    vscode.window.showInformationMessage('Copied Mermaid Sankey to clipboard');
+  } catch (error) {
+    vscode.window.showErrorMessage(`Could not convert Sankey diagram: ${error.message}`);
+  }
 }
 
 function activate(context) {
@@ -205,7 +246,8 @@ function activate(context) {
       vscode.window.activeTextEditor?.document &&
         vscode.commands.executeCommand('sankeyPreview.show').then(() =>
           vscode.window.showInformationMessage('Use the export button in preview.'));
-    })
+    }),
+    vscode.commands.registerCommand('sankeyPreview.copyMermaid', copyActiveDocumentAsMermaid)
   );
 }
 

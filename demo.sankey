@@ -1,5 +1,10 @@
 // Sankey Diagram Demo - Production Example
 // This demonstrates a real-world business scenario
+title: E-commerce revenue flow
+unit: USD
+valueFormat: compact
+linkColor: source
+nodeAlign: justify
 
 // E-commerce Revenue Flow
 Website --> Subscriptions --> Monthly: 5000

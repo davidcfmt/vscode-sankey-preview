@@ -1,4 +1,17 @@
 {
+  "Sankey Diagram": {
+    "prefix": "sankey",
+    "body": [
+      "title: ${1:Diagram title}",
+      "unit: ${2:units}",
+      "valueFormat: ${3|raw,integer,decimal,compact|}",
+      "linkColor: ${4|source,target,gradient|}",
+      "nodeAlign: ${5|justify,left,right,center|}",
+      "",
+      "${6:Source} --> ${7:Target}: ${8:100}"
+    ],
+    "description": "Create a Sankey diagram with metadata"
+  },
   "Link": {
     "prefix": "-->",
     "body": "$1 --> $2: $3",

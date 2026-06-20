@@ -2,6 +2,10 @@
   "scopeName": "source.sankey",
   "patterns": [
     { "name": "comment.line.double-slash.sankey", "match": "//.*$" },
+    { "name": "comment.line.percentage.sankey", "match": "%%.*$" },
+    { "name": "support.type.property-name.sankey", "match": "\\b(?:title|unit|valueFormat|linkColor|nodeAlign)\\b\\s*:" },
+    { "name": "constant.other.color.hex.sankey", "match": "#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?(?:[0-9a-fA-F]{2})?\\b" },
+    { "name": "constant.language.sankey", "match": "\\b(?:raw|integer|decimal|compact|source|target|gradient|left|right|center|justify)\\b" },
     { "name": "keyword.other.class.sankey", "match": "\\bclass\\b" },
     { "name": "constant.numeric.sankey", "match": "\\b\\d+(?:\\.\\d+)?\\b" },
     { "name": "keyword.operator.arrow.sankey", "match": "-->" },

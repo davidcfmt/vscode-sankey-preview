@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Run Sankey Extension",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "${workspaceFolder}/test.md"
+      ],
+      "preLaunchTask": "npm: build",
+      "outFiles": [
+        "${workspaceFolder}/src/**/*.js"
+      ]
+    },
+    {
+      "name": "Run Sankey Extension (workspace)",
+      "type": "extensionHost",
+      "request": "launch",
+      "args": [
+        "--extensionDevelopmentPath=${workspaceFolder}",
+        "${workspaceFolder}"
+      ],
+      "preLaunchTask": "npm: build",
+      "outFiles": [
+        "${workspaceFolder}/src/**/*.js"
+      ]
+    }
+  ]
+}

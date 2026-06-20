@@ -1,99 +1,154 @@
 # Sankey Markdown Preview
 
-A VS Code extension that renders text-based Sankey diagrams in Markdown preview and standalone `.sankey` files.
+A VS Code extension for writing Sankey flow diagrams directly beside Markdown research notes and in standalone `.sankey` files.
 
-## Features
+The extension renders only explicit `sankey` fenced code blocks in Markdown preview. It does not take over `mermaid` fences or generic code blocks, so it stays compatible with Mermaid-oriented authoring and other Markdown extensions.
 
-✅ **Markdown Integration** - Render Sankey diagrams directly in Markdown preview using fenced code blocks  
-✅ **Multi-Layer Flows** - Support for complex flows like `A → B → C → D`  
-✅ **Custom Styling** - Color nodes with `class NodeName color:#RRGGBB`  
-✅ **Standalone Files** - Full preview support for `.sankey` files  
-✅ **Export Options** - Export diagrams as SVG or PNG  
-✅ **Syntax Highlighting** - Code highlighting for `.sankey` files  
+## When to use Sankey
+
+Use a Sankey diagram when link width should mean something quantitative:
+
+- Energy, water, material, or emissions transfers
+- Budget, cost, revenue, or allocation flows
+- Product funnels and conversion drop-off
+- Dependency or effort flows where magnitude matters
+
+Sankey diagrams are less useful for ordinary process order, dependency topology, or categorical state changes. For those, consider:
+
+- Mermaid flowcharts for process steps and decision paths
+- Graphviz for dependency graphs and network structure
+- Alluvial-style flow charts for categorical transitions over stages
+- Vega, Plotly, or a data app when the chart needs dashboard-level interaction
 
 ## Quick Start
 
-### In Markdown Files
-
-Create a fenced code block with `sankey` language:
-
 ````markdown
 ```sankey
-Revenue --> Retail: 500
-Revenue --> Cloud: 1000
-class Retail color:#FFDD00
-class Cloud color:#0099FF
+title: Research budget allocation
+unit: USD
+valueFormat: compact
+linkColor: source
+nodeAlign: justify
+
+Grant --> Field work: 42000 "travel and local partners"
+Grant --> Lab analysis: 28000
+Grant --> Publication: 9000
+
+class Grant color:#2f6f73
+class Field color:#d97a3a
+class Lab color:#5c7fbd
 ```
 ````
 
-### Multi-Layer Flows
-
-Chain multiple nodes with arrows:
-
-````markdown
-```sankey
-// Multi-layer flows
-Revenue --> Retail --> Online --> Mobile: 300
-Revenue --> Retail --> Store --> Cash: 200
-Revenue --> Cloud --> AWS --> Compute: 600
-Revenue --> Cloud --> Azure --> Storage: 400
-
-// Styling
-class Revenue color:#2ECC71
-class Retail color:#FFDD00
-class Cloud color:#0099FF
-class Online color:#FF6B6B
-class Mobile color:#4ECDC4
-class Store color:#FFE66D
-class AWS color:#FF9F43
-class Azure color:#6C5CE7
-```
-````
-
-### Standalone .sankey Files
-
-Create a `.sankey` file and use **Ctrl+Shift+P** → **"Open Sankey Preview"** for a dedicated preview pane.
+Open Markdown preview to see the rendered diagram. In `.sankey` files, run **Open Sankey Preview** from the command palette for a dedicated preview pane.
 
 ## Syntax
 
-### Flow Syntax
-```
-Source --> Target: Value
-Source --> Intermediate --> Target: Value
+### Links
+
+```sankey
+Source --> Target: 123
+Source --> Intermediate --> Target: 123 "optional label"
+"Quoted source" --> "Quoted target": 45.6
 ```
 
-### Styling Syntax
+Multi-step paths create one link for each step using the same value.
+
+### Settings
+
+Put settings at the top level:
+
+```sankey
+title: Energy balance
+unit: kWh
+valueFormat: integer
+linkColor: gradient
+nodeAlign: center
 ```
+
+Supported settings:
+
+- `title:` text displayed above the diagram
+- `unit:` suffix shown with values
+- `valueFormat:` `raw`, `integer`, `decimal`, or `compact`
+- `linkColor:` `source`, `target`, `gradient`, or a `#RRGGBB` color
+- `nodeAlign:` `left`, `right`, `center`, or `justify`
+
+### Node Colors
+
+```sankey
 class NodeName color:#RRGGBB
+class "Quoted Node" color:#5c7fbd
 ```
 
 ### Comments
+
+```sankey
+// Comment
+%% Also a comment
 ```
-// This is a comment
-%% This is also a comment
+
+## Markdown Preview Tools
+
+Rendered diagrams include:
+
+- Copy as Mermaid Sankey
+- Export SVG
+- Export PNG
+- Pan and zoom controls
+- Balance warnings for intermediate nodes where incoming and outgoing totals differ
+- Line-aware error panels for invalid syntax or resource limits
+
+## Mermaid Portability
+
+The command **Sankey: Copy as Mermaid Sankey** converts the custom syntax into Mermaid's `sankey-beta` CSV format. This is useful for GitHub, documentation sites, or tools that already render Mermaid.
+
+Example source:
+
+```sankey
+Revenue --> Product: 1200
+Revenue --> Services: 800
 ```
+
+Copied Mermaid:
+
+````markdown
+```mermaid
+sankey-beta
+source,target,value
+"Revenue","Product",1200
+"Revenue","Services",800
+```
+````
+
+Mermaid export intentionally drops local-only preview affordances such as colors, titles, labels, and balance warnings because Mermaid's Sankey syntax is CSV-like.
 
 ## Commands
 
-- **Sankey Preview: Show** - Open preview for `.sankey` files
-- **Sankey: Export SVG** - Export current diagram as SVG
-- **Sankey: Export PNG** - Export current diagram as PNG
+- **Open Sankey Preview** - open a dedicated preview for `.sankey` files
+- **Sankey: Copy as Mermaid Sankey** - copy the current `.sankey` document or selected Sankey source as Mermaid
+- **Sankey: Export SVG** - open preview and use the SVG toolbar button
+- **Sankey: Export PNG** - open preview and use the PNG toolbar button
+
+## Development
+
+```powershell
+npm install
+npm run build
+npm test
+npm run lint
+npm audit
+npm audit --omit=dev
+npm run package
+```
+
+`media/preview.js` is generated from `src/previewRenderer.js` and bundles `d3-sankey`, so published extensions render offline without CDN or Kroki calls.
 
 ## Requirements
 
 - VS Code 1.91.0 or later
-- No external dependencies required
-
-## Installation
-
-1. Download the `.vsix` file from [Releases](https://github.com/davidcfmt/vscode-sankey-preview/releases)
-2. Run `code --install-extension sankey-markdown-preview-2.0.1.vsix`
-3. Reload VS Code
+- No network access required at preview time
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Issues and pull requests welcome at [GitHub](https://github.com/davidcfmt/vscode-sankey-preview).
+MIT License - see [LICENSE](LICENSE) for details.

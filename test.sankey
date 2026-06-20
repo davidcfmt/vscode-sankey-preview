@@ -1,5 +1,10 @@
 // Comprehensive Sankey Diagram Test
 // This file demonstrates all features of the extension
+title: Comprehensive Sankey diagram test
+unit: units
+valueFormat: integer
+linkColor: gradient
+nodeAlign: justify
 
 // Simple two-node flows
 Revenue --> Expenses: 800
@@ -8,7 +13,7 @@ Revenue --> Savings: 200
 // Multi-layer flows (chained nodes)
 Sales --> Marketing --> Digital --> Social: 150
 Sales --> Marketing --> Traditional --> TV: 100
-Sales --> Marketing --> Traditional --> Radio: 50
+Sales --> Marketing --> Traditional --> Radio: 100
 
 // Complex business process flow
 Input --> Processing --> Quality --> Output: 300

@@ -7,6 +7,9 @@ This file demonstrates Sankey diagrams rendered in Markdown preview with the sam
 Basic two-node flows showing revenue distribution:
 
 ```sankey
+title: Revenue split
+unit: USD
+valueFormat: compact
 Revenue --> Expenses: 800
 Revenue --> Savings: 200
 class Revenue color:#2ECC71
@@ -19,6 +22,10 @@ class Savings color:#3498DB
 Complex chained flows showing how sales flow through marketing channels:
 
 ```sankey
+title: Marketing channel flow
+unit: leads
+valueFormat: integer
+linkColor: gradient
 Sales --> Marketing --> Digital --> Social: 150
 Sales --> Marketing --> Traditional --> TV: 100
 Sales --> Marketing --> Traditional --> Radio: 50
@@ -37,6 +44,9 @@ class Radio color:#74B9FF
 Production process with quality control and waste management:
 
 ```sankey
+title: Production material flow
+unit: batches
+nodeAlign: center
 Input --> Processing --> Quality --> Output: 300
 Input --> Processing --> Waste --> Disposal: 50
 Input --> Direct --> Output: 100
@@ -55,6 +65,9 @@ class Disposal color:#636E72
 Renewable energy sources flowing to home consumption:
 
 ```sankey
+title: Renewable energy distribution
+unit: kWh
+linkColor: target
 Solar --> Battery --> Home: 400
 Solar --> Grid --> Home: 200
 Wind --> Battery --> Home: 150

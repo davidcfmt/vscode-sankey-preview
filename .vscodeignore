@@ -2,9 +2,11 @@
 test*.sankey
 test*.md
 test*.html
+tests/
 demo.sankey
 INSTRUCTIONS.md
 SECURITY.md
+src/previewRenderer.js
 .vscode/
 .git/
 node_modules/

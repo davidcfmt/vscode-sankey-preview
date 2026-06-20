@@ -89,24 +89,13 @@
         return true;
       }
       function parseClass(line, styles, lineNumber) {
-        const quotedMatch = line.match(/^class\s+"((?:\\"|[^"])+)"\s+(.+)$/);
-        const unquotedMatch = line.match(/^class\s+(\S+)\s+(.+)$/);
-        let node;
-        let rest;
-        if (quotedMatch) {
-          [, node, rest] = quotedMatch;
-          node = node.replace(/\\"/g, '"');
-        } else if (unquotedMatch) {
-          [, node, rest] = unquotedMatch;
-        } else {
+        const match = line.match(/^class\s+(?:"((?:\\"|[^"])+)"|(.+?))\s+color\s*:\s*(#[0-9a-f]{3}(?:[0-9a-f]{3})?(?:[0-9a-f]{2})?)\s*$/i);
+        if (!match) {
           throw parserError("Invalid class syntax. Use: class NodeName color:#RRGGBB", lineNumber);
         }
+        const node = (match[1] ? match[1].replace(/\\"/g, '"') : match[2]).trim();
         validateNodeName(node, "class", lineNumber);
-        const colorMatch = rest.match(/color\s*:\s*(#[0-9a-f]{3}(?:[0-9a-f]{3})?(?:[0-9a-f]{2})?)/i);
-        if (!colorMatch) {
-          throw parserError("Class styles currently support color:#RRGGBB only", lineNumber);
-        }
-        const color = colorMatch[1];
+        const color = match[3];
         validateHexColor(color, lineNumber, "color");
         styles[node] = { color };
       }
@@ -3262,6 +3251,8 @@ ${body}
   var SVG_NS = "http://www.w3.org/2000/svg";
   var MAX_RENDER_HEIGHT = 4e3;
   var EXPORT_SIZE_LIMIT = 10 * 1024 * 1024;
+  var DENSE_NODE_LABEL_LIMIT = 16;
+  var DENSE_LINK_LABEL_LIMIT = 18;
   var PALETTE = [
     "#4E79A7",
     "#F28E2B",
@@ -3436,7 +3427,8 @@ ${body}
 
     .sankey-link {
       fill: none;
-      mix-blend-mode: multiply;
+      mix-blend-mode: normal;
+      stroke-linecap: round;
     }
 
     .sankey-node-label,
@@ -3447,7 +3439,7 @@ ${body}
       pointer-events: none;
       stroke: var(--vscode-editor-background, #fff);
       stroke-linejoin: round;
-      stroke-width: 3px;
+      stroke-width: 4px;
     }
 
     .sankey-node-label {
@@ -3509,6 +3501,16 @@ ${body}
     });
     return colors;
   }
+  function isDenseDiagram(parsed) {
+    return parsed.nodes.length > DENSE_NODE_LABEL_LIMIT || parsed.links.length > DENSE_LINK_LABEL_LIMIT;
+  }
+  function getLinkOpacity(parsed) {
+    const dense = isDenseDiagram(parsed);
+    if (parsed.options.linkColor === "gradient") {
+      return dense ? 0.36 : 0.52;
+    }
+    return dense ? 0.32 : 0.45;
+  }
   function getLinkColor(link, options, colors, defs, renderId, index) {
     const setting = options.linkColor || "source";
     if (setting.startsWith("#")) {
@@ -3530,12 +3532,12 @@ ${body}
       appendSvg(gradient, "stop", {
         offset: "0%",
         "stop-color": colors.get(link.source.id) || PALETTE[0],
-        "stop-opacity": "0.62"
+        "stop-opacity": "1"
       });
       appendSvg(gradient, "stop", {
         offset: "100%",
         "stop-color": colors.get(link.target.id) || PALETTE[1],
-        "stop-opacity": "0.62"
+        "stop-opacity": "1"
       });
       return `url(#${id})`;
     }
@@ -3713,10 +3715,12 @@ ${serialized}`;
   function renderChart(chartArea, parsed, standalone, statusElement) {
     const renderId = renderCounter++;
     const formatter = makeFormatter(parsed.options);
-    const width = 980;
+    const dense = isDenseDiagram(parsed);
+    const linkOpacity = getLinkOpacity(parsed);
+    const width = dense ? 1180 : 980;
     const calculatedHeight = 260 + parsed.nodes.length * 22 + parsed.links.length * 4;
     const height = Math.min(MAX_RENDER_HEIGHT, Math.max(420, calculatedHeight));
-    const margin = { top: 24, right: 160, bottom: 24, left: 160 };
+    const margin = dense ? { top: 32, right: 190, bottom: 32, left: 190 } : { top: 24, right: 160, bottom: 24, left: 160 };
     const graph = sankey().nodeId((node) => node.id).nodeAlign(nodeAlignFactory(parsed.options.nodeAlign)).nodeWidth(18).nodePadding(16).extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])({
       nodes: parsed.nodes.map((node) => ({ ...node })),
       links: parsed.links.map((link) => ({ ...link }))
@@ -3735,7 +3739,7 @@ ${serialized}`;
         class: "sankey-link",
         d: sankeyLinkHorizontal()(link),
         stroke,
-        "stroke-opacity": parsed.options.linkColor === "gradient" ? 1 : 0.45,
+        "stroke-opacity": linkOpacity,
         "stroke-width": Math.max(1, link.width)
       });
       const title = appendSvg(path, "title");
@@ -3771,7 +3775,7 @@ ${serialized}`;
         dy: "0.35em",
         "text-anchor": node.x0 < width / 2 ? "start" : "end"
       });
-      label.textContent = `${node.id} ${formatter(node.value)}`;
+      label.textContent = dense ? node.id : `${node.id} ${formatter(node.value)}`;
     });
     const controls = enablePanZoom(svg, viewport, statusElement);
     return {

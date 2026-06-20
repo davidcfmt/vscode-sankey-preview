@@ -93,27 +93,15 @@ function parseOption(line, options, warnings, lineNumber) {
 }
 
 function parseClass(line, styles, lineNumber) {
-  const quotedMatch = line.match(/^class\s+"((?:\\"|[^"])+)"\s+(.+)$/);
-  const unquotedMatch = line.match(/^class\s+(\S+)\s+(.+)$/);
-
-  let node;
-  let rest;
-  if (quotedMatch) {
-    [, node, rest] = quotedMatch;
-    node = node.replace(/\\"/g, '"');
-  } else if (unquotedMatch) {
-    [, node, rest] = unquotedMatch;
-  } else {
+  const match = line.match(/^class\s+(?:"((?:\\"|[^"])+)"|(.+?))\s+color\s*:\s*(#[0-9a-f]{3}(?:[0-9a-f]{3})?(?:[0-9a-f]{2})?)\s*$/i);
+  if (!match) {
     throw parserError('Invalid class syntax. Use: class NodeName color:#RRGGBB', lineNumber);
   }
 
+  const node = (match[1] ? match[1].replace(/\\"/g, '"') : match[2]).trim();
   validateNodeName(node, 'class', lineNumber);
-  const colorMatch = rest.match(/color\s*:\s*(#[0-9a-f]{3}(?:[0-9a-f]{3})?(?:[0-9a-f]{2})?)/i);
-  if (!colorMatch) {
-    throw parserError('Class styles currently support color:#RRGGBB only', lineNumber);
-  }
 
-  const color = colorMatch[1];
+  const color = match[3];
   validateHexColor(color, lineNumber, 'color');
   styles[node] = { color };
 }

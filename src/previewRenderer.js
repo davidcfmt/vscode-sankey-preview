@@ -17,6 +17,8 @@ const {
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MAX_RENDER_HEIGHT = 4000;
 const EXPORT_SIZE_LIMIT = 10 * 1024 * 1024;
+const DENSE_NODE_LABEL_LIMIT = 16;
+const DENSE_LINK_LABEL_LIMIT = 18;
 const PALETTE = [
   '#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F',
   '#EDC949', '#AF7AA1', '#FF9DA7', '#9C755F', '#BAB0AC'
@@ -193,7 +195,8 @@ function injectStyles() {
 
     .sankey-link {
       fill: none;
-      mix-blend-mode: multiply;
+      mix-blend-mode: normal;
+      stroke-linecap: round;
     }
 
     .sankey-node-label,
@@ -204,7 +207,7 @@ function injectStyles() {
       pointer-events: none;
       stroke: var(--vscode-editor-background, #fff);
       stroke-linejoin: round;
-      stroke-width: 3px;
+      stroke-width: 4px;
     }
 
     .sankey-node-label {
@@ -273,6 +276,18 @@ function getColorMaps(graph) {
   return colors;
 }
 
+function isDenseDiagram(parsed) {
+  return parsed.nodes.length > DENSE_NODE_LABEL_LIMIT || parsed.links.length > DENSE_LINK_LABEL_LIMIT;
+}
+
+function getLinkOpacity(parsed) {
+  const dense = isDenseDiagram(parsed);
+  if (parsed.options.linkColor === 'gradient') {
+    return dense ? 0.36 : 0.52;
+  }
+  return dense ? 0.32 : 0.45;
+}
+
 function getLinkColor(link, options, colors, defs, renderId, index) {
   const setting = options.linkColor || 'source';
   if (setting.startsWith('#')) {
@@ -294,12 +309,12 @@ function getLinkColor(link, options, colors, defs, renderId, index) {
     appendSvg(gradient, 'stop', {
       offset: '0%',
       'stop-color': colors.get(link.source.id) || PALETTE[0],
-      'stop-opacity': '0.62'
+      'stop-opacity': '1'
     });
     appendSvg(gradient, 'stop', {
       offset: '100%',
       'stop-color': colors.get(link.target.id) || PALETTE[1],
-      'stop-opacity': '0.62'
+      'stop-opacity': '1'
     });
     return `url(#${id})`;
   }
@@ -502,10 +517,14 @@ function enablePanZoom(svg, viewport, statusElement) {
 function renderChart(chartArea, parsed, standalone, statusElement) {
   const renderId = renderCounter++;
   const formatter = makeFormatter(parsed.options);
-  const width = 980;
+  const dense = isDenseDiagram(parsed);
+  const linkOpacity = getLinkOpacity(parsed);
+  const width = dense ? 1180 : 980;
   const calculatedHeight = 260 + (parsed.nodes.length * 22) + (parsed.links.length * 4);
   const height = Math.min(MAX_RENDER_HEIGHT, Math.max(420, calculatedHeight));
-  const margin = { top: 24, right: 160, bottom: 24, left: 160 };
+  const margin = dense
+    ? { top: 32, right: 190, bottom: 32, left: 190 }
+    : { top: 24, right: 160, bottom: 24, left: 160 };
 
   const graph = sankey()
     .nodeId((node) => node.id)
@@ -532,7 +551,7 @@ function renderChart(chartArea, parsed, standalone, statusElement) {
       class: 'sankey-link',
       d: sankeyLinkHorizontal()(link),
       stroke,
-      'stroke-opacity': parsed.options.linkColor === 'gradient' ? 1 : 0.45,
+      'stroke-opacity': linkOpacity,
       'stroke-width': Math.max(1, link.width)
     });
     const title = appendSvg(path, 'title');
@@ -573,7 +592,7 @@ function renderChart(chartArea, parsed, standalone, statusElement) {
       dy: '0.35em',
       'text-anchor': node.x0 < width / 2 ? 'start' : 'end'
     });
-    label.textContent = `${node.id} ${formatter(node.value)}`;
+    label.textContent = dense ? node.id : `${node.id} ${formatter(node.value)}`;
   });
 
   const controls = enablePanZoom(svg, viewport, statusElement);

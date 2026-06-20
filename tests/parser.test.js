@@ -20,6 +20,7 @@ linkColor: gradient
 nodeAlign: center
 "Solar, site" --> Battery --> Load: 123.5 "served demand"
 class "Solar, site" color:#ffcc00
+class Battery color:#3366ff
 `);
 
   assert.equal(parsed.options.title, 'Energy balance');
@@ -33,6 +34,18 @@ class "Solar, site" color:#ffcc00
   ]);
   assert.equal(parsed.links[1].label, 'served demand');
   assert.equal(parsed.nodes.find((node) => node.id === 'Solar, site').color, '#ffcc00');
+  assert.equal(parsed.nodes.find((node) => node.id === 'Battery').color, '#3366ff');
+});
+
+test('parses unquoted class names with spaces', () => {
+  const parsed = parseSankey(`
+Research notes --> Release momentum: 8
+class Research notes color:#51cf66
+class Release momentum color:#ff8787
+`);
+
+  assert.equal(parsed.nodes.find((node) => node.id === 'Research notes').color, '#51cf66');
+  assert.equal(parsed.nodes.find((node) => node.id === 'Release momentum').color, '#ff8787');
 });
 
 test('rejects invalid metadata values with line numbers', () => {

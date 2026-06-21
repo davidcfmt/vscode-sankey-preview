@@ -1,57 +1,79 @@
-// Sankey Diagram Demo - Production Example
-// This demonstrates a real-world business scenario
-title: E-commerce revenue flow
-unit: USD
-valueFormat: compact
-linkColor: source
+// Sankey Markdown Preview demo
+// A moderately complex release flow that stays readable in Markdown preview.
+title: Sankey Markdown Preview - Release Flow Showcase
+unit: effort
+valueFormat: integer
+linkColor: gradient
 nodeAlign: justify
 
-// E-commerce Revenue Flow
-Website --> Subscriptions --> Monthly: 5000
-Website --> Subscriptions --> Annual: 2000
-Website --> OneTime --> Products: 8000
-Website --> OneTime --> Services: 3000
+Problem itch --> Product direction: 30
+Sankey research --> Product direction: 25
+User feedback --> Product direction: 20
+Security review --> Product direction: 15
+VS Code docs --> Product direction: 10
 
-// Subscription Processing
-Monthly --> Processing --> Active: 4500
-Monthly --> Processing --> Churned: 500
-Annual --> Processing --> Active: 1800
-Annual --> Processing --> Churned: 200
+Product direction --> Friendly syntax: 28
+Product direction --> Markdown reliability: 24
+Product direction --> Local renderer: 22
+Product direction --> Release polish: 16
+Product direction --> Documentation: 10
 
-// Product Fulfillment
-Products --> Warehouse --> Shipped: 7200
-Products --> Warehouse --> Returned: 800
-Services --> Delivery --> Completed: 2700
-Services --> Delivery --> Cancelled: 300
+Friendly syntax --> Markdown authoring: 18
+Friendly syntax --> Mermaid portability: 10
 
-// Financial Flow
-Shipped --> Revenue --> Profit: 6000
-Shipped --> Revenue --> Costs: 1200
-Completed --> Revenue --> Profit: 2400
-Completed --> Revenue --> Costs: 300
+Markdown reliability --> Explicit sankey fences: 10
+Markdown reliability --> Preview refresh handling: 8
+Markdown reliability --> Standard Markdown compatibility: 6
 
-// Advanced styling with business colors
-class Website color:#3498DB
-class Subscriptions color:#2ECC71
-class OneTime color:#E67E22
-class Monthly color:#9B59B6
-class Annual color:#1ABC9C
-class Products color:#F39C12
-class Services color:#E74C3C
-class Processing color:#34495E
-class Active color:#27AE60
-class Churned color:#C0392B
-class Warehouse color:#8E44AD
-class Delivery color:#2980B9
-class Shipped color:#16A085
-class Returned color:#D35400
-class Completed color:#2ECC71
-class Cancelled color:#E74C3C
-class Revenue color:#F1C40F
-class Profit color:#27AE60
-class Costs color:#E74C3C
+Local renderer --> D3 layout: 14
+Local renderer --> SVG and PNG export: 8
 
-// Business metrics in comments
-// Total Website Traffic: 18,000
-// Conversion Rate: 85%
-// Customer Satisfaction: 92%
+Release polish --> Visual spacing: 7
+Release polish --> Better examples: 5
+Release polish --> Marketplace story: 4
+
+Documentation --> When to use Sankey: 5
+Documentation --> Better examples: 5
+
+Markdown authoring --> Research notes: 18
+Mermaid portability --> GitHub docs: 10
+Explicit sankey fences --> Extension compatibility: 10
+Preview refresh handling --> Extension compatibility: 8
+Standard Markdown compatibility --> Extension compatibility: 6
+D3 layout --> Fast local workflow: 14
+SVG and PNG export --> Presentation assets: 8
+Visual spacing --> Readable diagrams: 7
+Better examples --> Easier adoption: 10
+Marketplace story --> Release momentum: 4
+When to use Sankey --> Research notes: 5
+
+class Problem itch color:#ff6b6b
+class Sankey research color:#f7b801
+class User feedback color:#20c997
+class Security review color:#e64980
+class VS Code docs color:#4dabf7
+class Product direction color:#2f9e44
+class Friendly syntax color:#15aabf
+class Markdown reliability color:#0ca678
+class Local renderer color:#228be6
+class Release polish color:#f08c00
+class Documentation color:#868e96
+class Markdown authoring color:#38d9a9
+class Mermaid portability color:#5c7cfa
+class Explicit sankey fences color:#b197fc
+class Preview refresh handling color:#40c057
+class Standard Markdown compatibility color:#69db7c
+class D3 layout color:#339af0
+class SVG and PNG export color:#ffa94d
+class Visual spacing color:#fcc419
+class Better examples color:#ffd43b
+class Marketplace story color:#ff8787
+class When to use Sankey color:#adb5bd
+class Research notes color:#51cf66
+class GitHub docs color:#74c0fc
+class Extension compatibility color:#b197fc
+class Fast local workflow color:#339af0
+class Presentation assets color:#ffa94d
+class Readable diagrams color:#ffe066
+class Easier adoption color:#ffd43b
+class Release momentum color:#ff8787

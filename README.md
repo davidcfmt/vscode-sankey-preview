@@ -72,6 +72,53 @@ Open Markdown preview to see the rendered diagram. In `.sankey` files, run **Ope
 
 ## Example Use Cases
 
+### Release Flow Showcase
+
+```sankey
+title: Sankey Markdown Preview - Release Flow Showcase
+unit: effort
+valueFormat: integer
+linkColor: gradient
+nodeAlign: justify
+
+Problem itch --> Product direction: 30
+Sankey research --> Product direction: 25
+User feedback --> Product direction: 20
+Security review --> Product direction: 15
+VS Code docs --> Product direction: 10
+
+Product direction --> Friendly syntax: 28
+Product direction --> Markdown reliability: 24
+Product direction --> Local renderer: 22
+Product direction --> Release polish: 16
+Product direction --> Documentation: 10
+
+Friendly syntax --> Markdown authoring: 18
+Friendly syntax --> Mermaid portability: 10
+Markdown reliability --> Explicit sankey fences: 10
+Markdown reliability --> Preview refresh handling: 8
+Markdown reliability --> Standard Markdown compatibility: 6
+Local renderer --> D3 layout: 14
+Local renderer --> SVG and PNG export: 8
+Release polish --> Visual spacing: 7
+Release polish --> Better examples: 5
+Release polish --> Marketplace story: 4
+Documentation --> When to use Sankey: 5
+Documentation --> Better examples: 5
+
+Markdown authoring --> Research notes: 18
+Mermaid portability --> GitHub docs: 10
+Explicit sankey fences --> Extension compatibility: 10
+Preview refresh handling --> Extension compatibility: 8
+Standard Markdown compatibility --> Extension compatibility: 6
+D3 layout --> Fast local workflow: 14
+SVG and PNG export --> Presentation assets: 8
+Visual spacing --> Readable diagrams: 7
+Better examples --> Easier adoption: 10
+Marketplace story --> Release momentum: 4
+When to use Sankey --> Research notes: 5
+```
+
 ### Energy Flow
 
 ```sankey

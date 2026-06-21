@@ -19,6 +19,8 @@ const MAX_RENDER_HEIGHT = 4000;
 const EXPORT_SIZE_LIMIT = 10 * 1024 * 1024;
 const DENSE_NODE_LABEL_LIMIT = 16;
 const DENSE_LINK_LABEL_LIMIT = 18;
+const COMPACT_NODE_LIMIT = 6;
+const COMPACT_LINK_LIMIT = 4;
 const PALETTE = [
   '#4E79A7', '#F28E2B', '#E15759', '#76B7B2', '#59A14F',
   '#EDC949', '#AF7AA1', '#FF9DA7', '#9C755F', '#BAB0AC'
@@ -99,7 +101,7 @@ function injectStyles() {
     }
 
     .sankey-preview-host .sankey-render {
-      height: min(70vh, 620px);
+      height: clamp(320px, 52vh, 560px);
       max-height: 80vh;
       resize: vertical;
     }
@@ -180,7 +182,7 @@ function injectStyles() {
 
     .sankey-chart {
       flex: 1 1 auto;
-      min-height: 240px;
+      min-height: 280px;
       overflow: hidden;
       position: relative;
     }
@@ -196,7 +198,7 @@ function injectStyles() {
     .sankey-link {
       fill: none;
       mix-blend-mode: normal;
-      stroke-linecap: round;
+      stroke-linecap: butt;
     }
 
     .sankey-node-label,
@@ -211,7 +213,7 @@ function injectStyles() {
     }
 
     .sankey-node-label {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 600;
     }
 
@@ -280,12 +282,50 @@ function isDenseDiagram(parsed) {
   return parsed.nodes.length > DENSE_NODE_LABEL_LIMIT || parsed.links.length > DENSE_LINK_LABEL_LIMIT;
 }
 
+function isCompactDiagram(parsed) {
+  return parsed.nodes.length <= COMPACT_NODE_LIMIT && parsed.links.length <= COMPACT_LINK_LIMIT;
+}
+
 function getLinkOpacity(parsed) {
   const dense = isDenseDiagram(parsed);
   if (parsed.options.linkColor === 'gradient') {
-    return dense ? 0.36 : 0.52;
+    return dense ? 0.34 : 0.46;
   }
-  return dense ? 0.32 : 0.45;
+  return dense ? 0.3 : 0.42;
+}
+
+function getLayoutMetrics(parsed) {
+  const dense = isDenseDiagram(parsed);
+  const compact = isCompactDiagram(parsed);
+  const width = dense ? 1180 : compact ? 760 : 960;
+  const calculatedHeight = compact
+    ? 320
+    : 300 + (parsed.nodes.length * 20) + (parsed.links.length * 5);
+  const height = Math.min(MAX_RENDER_HEIGHT, Math.max(compact ? 320 : 430, calculatedHeight));
+  const margin = compact
+    ? { top: 52, right: 150, bottom: 44, left: 150 }
+    : dense
+      ? { top: 40, right: 180, bottom: 40, left: 180 }
+      : { top: 36, right: 160, bottom: 36, left: 160 };
+  const availableHeight = Math.max(120, height - margin.top - margin.bottom);
+  const flowHeight = dense
+    ? availableHeight
+    : Math.min(availableHeight, Math.max(140, 96 + (parsed.links.length * 22)));
+  const flowTop = margin.top + ((availableHeight - flowHeight) / 2);
+
+  return {
+    dense,
+    compact,
+    width,
+    height,
+    margin,
+    extent: [
+      [margin.left, flowTop],
+      [width - margin.right, flowTop + flowHeight]
+    ],
+    nodePadding: dense ? 12 : compact ? 24 : 18,
+    nodeWidth: dense ? 14 : 18
+  };
 }
 
 function getLinkColor(link, options, colors, defs, renderId, index) {
@@ -460,6 +500,27 @@ async function copyMermaid(parsed, standalone, statusElement) {
   showStatus(statusElement, 'Copied Mermaid');
 }
 
+function nodeLabelPosition(node, metrics) {
+  const nodeWidth = Math.max(1, node.x1 - node.x0);
+  const leftEdge = Math.abs(node.x0 - metrics.extent[0][0]) < 1;
+  const rightEdge = Math.abs(node.x1 - metrics.extent[1][0]) < 1;
+
+  if (leftEdge) {
+    return { x: -8, anchor: 'end' };
+  }
+  if (rightEdge) {
+    return { x: nodeWidth + 8, anchor: 'start' };
+  }
+  if (node.x0 < metrics.width / 2) {
+    return { x: nodeWidth + 8, anchor: 'start' };
+  }
+  return { x: -8, anchor: 'end' };
+}
+
+function nodeLabelText(node, formatter, dense) {
+  return dense ? node.id : `${node.id} ${formatter(node.value)}`;
+}
+
 function enablePanZoom(svg, viewport, statusElement) {
   const state = { scale: 1, x: 0, y: 0, dragging: false, pointerId: null, startX: 0, startY: 0 };
 
@@ -517,21 +578,16 @@ function enablePanZoom(svg, viewport, statusElement) {
 function renderChart(chartArea, parsed, standalone, statusElement) {
   const renderId = renderCounter++;
   const formatter = makeFormatter(parsed.options);
-  const dense = isDenseDiagram(parsed);
+  const metrics = getLayoutMetrics(parsed);
+  const { dense, width, height } = metrics;
   const linkOpacity = getLinkOpacity(parsed);
-  const width = dense ? 1180 : 980;
-  const calculatedHeight = 260 + (parsed.nodes.length * 22) + (parsed.links.length * 4);
-  const height = Math.min(MAX_RENDER_HEIGHT, Math.max(420, calculatedHeight));
-  const margin = dense
-    ? { top: 32, right: 190, bottom: 32, left: 190 }
-    : { top: 24, right: 160, bottom: 24, left: 160 };
 
   const graph = sankey()
     .nodeId((node) => node.id)
     .nodeAlign(nodeAlignFactory(parsed.options.nodeAlign))
-    .nodeWidth(18)
-    .nodePadding(16)
-    .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])({
+    .nodeWidth(metrics.nodeWidth)
+    .nodePadding(metrics.nodePadding)
+    .extent(metrics.extent)({
       nodes: parsed.nodes.map((node) => ({ ...node })),
       links: parsed.links.map((link) => ({ ...link }))
     });
@@ -559,7 +615,7 @@ function renderChart(chartArea, parsed, standalone, statusElement) {
       ? `${link.source.id} to ${link.target.id}: ${formatter(link.value)} (${link.label})`
       : `${link.source.id} to ${link.target.id}: ${formatter(link.value)}`;
 
-    if (link.label) {
+    if (link.label && !dense && link.width >= 10) {
       const label = appendSvg(viewport, 'text', {
         class: 'sankey-link-label',
         x: (link.source.x1 + link.target.x0) / 2,
@@ -584,15 +640,15 @@ function renderChart(chartArea, parsed, standalone, statusElement) {
     const title = appendSvg(group, 'title');
     title.textContent = `${node.id}: ${formatter(node.value)}`;
 
-    const labelX = node.x0 < width / 2 ? node.x1 - node.x0 + 8 : -8;
+    const labelPosition = nodeLabelPosition(node, metrics);
     const label = appendSvg(group, 'text', {
       class: 'sankey-node-label',
-      x: labelX,
+      x: labelPosition.x,
       y: Math.max(12, (node.y1 - node.y0) / 2),
       dy: '0.35em',
-      'text-anchor': node.x0 < width / 2 ? 'start' : 'end'
+      'text-anchor': labelPosition.anchor
     });
-    label.textContent = dense ? node.id : `${node.id} ${formatter(node.value)}`;
+    label.textContent = nodeLabelText(node, formatter, dense);
   });
 
   const controls = enablePanZoom(svg, viewport, statusElement);
@@ -700,11 +756,32 @@ function renderStandalone() {
 }
 
 function getMarkdownSankeyBlocks() {
-  return Array.from(document.querySelectorAll('pre > code.language-sankey'));
+  const pluginHosts = Array.from(document.querySelectorAll('.sankey-preview-host[data-sankey-pending="true"]'))
+    .map((host) => ({
+      type: 'host',
+      host,
+      source: host.querySelector('.sankey-source')
+    }))
+    .filter((block) => block.source);
+  const codeBlocks = Array.from(document.querySelectorAll('pre > code.language-sankey'))
+    .map((code) => ({ type: 'code', code }));
+  return pluginHosts.concat(codeBlocks);
 }
 
 function renderMarkdownBlocks(blocks) {
-  blocks.forEach((code) => {
+  blocks.forEach((block) => {
+    if (block.type === 'host') {
+      const { host, source } = block;
+      if (host.dataset.sankeyRendered === 'true') {
+        return;
+      }
+      host.dataset.sankeyRendered = 'true';
+      delete host.dataset.sankeyPending;
+      renderInto(host, source.textContent || '', DEFAULT_LIMITS, { standalone: false });
+      return;
+    }
+
+    const { code } = block;
     if (code.dataset.sankeyRendered === 'true') {
       return;
     }
@@ -717,18 +794,35 @@ function renderMarkdownBlocks(blocks) {
   });
 }
 
+function renderMarkdownOnce() {
+  const blocks = getMarkdownSankeyBlocks();
+  if (blocks.length === 0) {
+    return false;
+  }
+
+  injectStyles();
+  renderMarkdownBlocks(blocks);
+  return true;
+}
+
+function scheduleMarkdownRender() {
+  renderMarkdownOnce();
+  window.requestAnimationFrame(() => renderMarkdownOnce());
+  window.setTimeout(() => renderMarkdownOnce(), 50);
+}
+
 function start() {
   if (renderStandalone()) {
     injectStyles();
     return;
   }
 
-  const blocks = getMarkdownSankeyBlocks();
-  if (blocks.length > 0) {
-    injectStyles();
-    renderMarkdownBlocks(blocks);
-  }
+  scheduleMarkdownRender();
 }
+
+window.addEventListener('vscode.markdown.updateContent', () => {
+  scheduleMarkdownRender();
+});
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', start, { once: true });

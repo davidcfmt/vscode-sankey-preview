@@ -200,6 +200,28 @@ function validateDocument(doc) {
   diagCollection.set(doc.uri, diagnostics);
 }
 
+function extendMarkdownIt(md) {
+  const defaultFence = md.renderer.rules.fence;
+
+  md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+    const token = tokens[idx];
+    const language = (token.info || '').trim().split(/\s+/)[0].toLowerCase();
+    if (language !== 'sankey') {
+      return defaultFence
+        ? defaultFence(tokens, idx, options, env, self)
+        : self.renderToken(tokens, idx, options);
+    }
+
+    return [
+      '<div class="sankey-preview-host" data-sankey-pending="true">',
+      `<pre class="sankey-source" hidden>${md.utils.escapeHtml(token.content)}</pre>`,
+      '</div>'
+    ].join('');
+  };
+
+  return md;
+}
+
 async function copyActiveDocumentAsMermaid() {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
@@ -249,10 +271,12 @@ function activate(context) {
     }),
     vscode.commands.registerCommand('sankeyPreview.copyMermaid', copyActiveDocumentAsMermaid)
   );
+
+  return { extendMarkdownIt };
 }
 
 function deactivate() {
   diagCollection.dispose();
 }
 
-module.exports = { activate, deactivate };
+module.exports = { activate, deactivate, extendMarkdownIt };

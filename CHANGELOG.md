@@ -2,6 +2,36 @@
 
 All notable changes to the "sankey-markdown-preview" extension will be documented in this file.
 
+## [2.1.6] - 2026-06-20
+
+### Fixed
+- Ensure the Markdown integration activates for Markdown previews and retries rendering after VS Code refreshes preview content.
+
+---
+
+## [2.1.5] - 2026-06-20
+
+### Fixed
+- Switched Markdown rendering to a `markdown-it` fence integration so ordinary Markdown files preview normally while `sankey` fences still render.
+- Removed the `.sankey` `Ctrl+Shift+P` keybinding override so the command palette opens normally.
+
+---
+
+## [2.1.4] - 2026-06-20
+
+### Changed
+- Simplified Sankey rendering with squared link ends, calmer opacity, compact diagram sizing, and endpoint labels placed outside thick flows.
+- Added a moderately complex release-flow showcase to the README and bundled `.sankey` example.
+
+---
+
+## [2.1.3] - 2026-06-20
+
+### Fixed
+- Render Sankey fences after VS Code refreshes Markdown preview content, fixing `.md` previews that opened before the rendered code blocks were available.
+
+---
+
 ## [2.1.2] - 2026-06-20
 
 ### Fixed
